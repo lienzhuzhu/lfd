@@ -1,84 +1,95 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-COINS = 1000
-FLIPS = 10
-TRIALS = 100000
-
-first_coin_heads = np.zeros(TRIALS)
-random_coin_heads = np.zeros(TRIALS)
-min_heads_coin_heads = np.zeros(TRIALS)
-
-epsilons = np.arange(0, 0.5, 0.01)
-
-first_coin_probs = [np.mean(np.abs(first_coin_heads/FLIPS - 0.5) > eps) for eps in epsilons]
-random_coin_probs = [np.mean(np.abs(random_coin_heads/FLIPS - 0.5) > eps) for eps in epsilons]
-min_heads_coin_probs = [np.mean(np.abs(min_heads_coin_heads/FLIPS - 0.5) > eps) for eps in epsilons]
-
-hoeffding_probs = hoeffding_bound(epsilons, FLIPS)
+COINS   = 1000
+FLIPS   = 10
+TRIALS  = 100000
+MU      = 0.5
 
 
 def hoeffding_bound(epsilon, N):
     return 2 * np.exp(-2 * epsilon**2 * N)
 
 
-for i in range(TRIALS):
-    # Simulate flips for all coins
-    flips = np.random.randint(2, size=(COINS, FLIPS))
-    heads_counts = flips.sum(axis=1)
-    
-    # Record data for the first coin
-    first_coin_heads[i] = heads_counts[0]
-    
-    # Record data for a randomly chosen coin
-    random_coin_index = np.random.choice(COINS)
-    random_coin_heads[i] = heads_counts[random_coin_index]
-    
-    # Record data for the coin with the minimum frequency of heads
-    min_heads_coin_index = np.argmin(heads_counts)
-    min_heads_coin_heads[i] = heads_counts[min_heads_coin_index]
+def main():
+    first_coin_heads = np.zeros(TRIALS)
+    random_coin_heads = np.zeros(TRIALS)
+    min_heads_coin_heads = np.zeros(TRIALS)
 
 
-# Plotting the results
-plt.figure(figsize=(15, 15))
+    for i in range(TRIALS):
+        # Simulate flips for all coins
+        flips = np.random.randint(2, size=(COINS, FLIPS))
+        heads_counts = flips.sum(axis=1)
+        
+        # Record data for the first coin
+        first_coin_heads[i] = heads_counts[0]
+        
+        # Record data for a randomly chosen coin
+        random_coin_index = np.random.choice(COINS)
+        random_coin_heads[i] = heads_counts[random_coin_index]
+        
+        # Record data for the coin with the minimum frequency of heads
+        min_heads_coin_index = np.argmin(heads_counts)
+        min_heads_coin_heads[i] = heads_counts[min_heads_coin_index]
 
-# Histograms
-plt.subplot(3, 3, 1)
-plt.hist(first_coin_heads, bins=range(12), alpha=0.7, edgecolor='black')
-plt.title("First Coin Histogram")
-plt.xlabel("Number of Heads")
-plt.ylabel("Frequency")
+    epsilons = np.arange(0, 0.5, 0.01)
 
-plt.subplot(3, 3, 2)
-plt.hist(random_coin_heads, bins=range(12), alpha=0.7, edgecolor='black')
-plt.title("Randomly Chosen Coin Histogram")
-plt.xlabel("Number of Heads")
+    first_coin_probs = [np.mean(np.abs(first_coin_heads/FLIPS - MU) > eps) for eps in epsilons]
+    random_coin_probs = [np.mean(np.abs(random_coin_heads/FLIPS - MU) > eps) for eps in epsilons]
+    min_heads_coin_probs = [np.mean(np.abs(min_heads_coin_heads/FLIPS - MU) > eps) for eps in epsilons]
 
-plt.subplot(3, 3, 3)
-plt.hist(min_heads_coin_heads, bins=range(12), alpha=0.7, edgecolor='black')
-plt.title("Coin with Minimum Heads Histogram")
-plt.xlabel("Number of Heads")
+    average_nu_min = np.mean(min_heads_coin_heads) / FLIPS
+    print(f"Average value of ν_min: {average_nu_min}")
 
-# Hoeffding Plots
-plt.subplot(3, 3, 4)
-plt.plot(epsilons, first_coin_probs, label="Experimental")
-plt.plot(epsilons, hoeffding_probs, label="Hoeffding Bound", linestyle='--')
-plt.title("First Coin")
-plt.xlabel("Epsilon (ε)")
-plt.ylabel("Probability Measure")
-plt.legend()
+    hoeffding_probs = hoeffding_bound(epsilons, FLIPS)
 
-plt.subplot(3, 3, 5)
-plt.plot(epsilons, random_coin_probs, label="Experimental")
-plt.plot(epsilons, hoeffding_probs, label="Hoeffding Bound", linestyle='--')
-plt.title("Randomly Chosen Coin")
-plt.xlabel("Epsilon (ε)")
 
-plt.subplot(3, 3, 6)
-plt.plot(epsilons, min_heads_coin_probs, label="Experimental")
-plt.plot(epsilons, hoeffding_probs, label="Hoeffding Bound", linestyle='--')
-plt.title("Coin with Minimum Heads")
-plt.xlabel("Epsilon (ε)")
+    # Plotting the results
+    plt.figure(figsize=(15, 15))
 
-plt.tight_layout()
-plt.show()
+    # Histograms
+    plt.subplot(3, 3, 1)
+    plt.hist(first_coin_heads, bins=range(12), alpha=0.7, edgecolor='black')
+    plt.title("First Coin Histogram")
+    plt.xlabel("Number of Heads")
+    plt.ylabel("Frequency")
+
+    plt.subplot(3, 3, 2)
+    plt.hist(random_coin_heads, bins=range(12), alpha=0.7, edgecolor='black')
+    plt.title("Randomly Chosen Coin Histogram")
+    plt.xlabel("Number of Heads")
+
+    plt.subplot(3, 3, 3)
+    plt.hist(min_heads_coin_heads, bins=range(12), alpha=0.7, edgecolor='black')
+    plt.title("Coin with Minimum Heads Histogram")
+    plt.xlabel("Number of Heads")
+
+    # Hoeffding Plots
+    plt.subplot(3, 3, 4)
+    plt.plot(epsilons, first_coin_probs, label="Experimental")
+    plt.plot(epsilons, hoeffding_probs, label="Hoeffding Bound", linestyle='--')
+    plt.title("First Coin")
+    plt.xlabel("Epsilon (ε)")
+    plt.ylabel("Probability Measure")
+    plt.legend()
+
+    plt.subplot(3, 3, 5)
+    plt.plot(epsilons, random_coin_probs, label="Experimental")
+    plt.plot(epsilons, hoeffding_probs, label="Hoeffding Bound", linestyle='--')
+    plt.title("Randomly Chosen Coin")
+    plt.xlabel("Epsilon (ε)")
+
+    plt.subplot(3, 3, 6)
+    plt.plot(epsilons, min_heads_coin_probs, label="Experimental")
+    plt.plot(epsilons, hoeffding_probs, label="Hoeffding Bound", linestyle='--')
+    plt.title("Coin with Minimum Heads")
+    plt.xlabel("Epsilon (ε)")
+
+    plt.tight_layout()
+    plt.show()
+
+
+
+if __name__ == "__main__":
+    main()
