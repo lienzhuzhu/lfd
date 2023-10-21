@@ -80,6 +80,9 @@ def main():
     print("Disagreement:", avg_disagreement_prob)
 
 
+
+    ## Plot data and hyperplanes for the last experiment trial ##
+
     # plot data points
     plt.figure(figsize=(8, 6))
     plt.scatter(X[:, 1][Y == 1], X[:, 2][Y == 1], color='blue', marker='o', label='Class +1')
