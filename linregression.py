@@ -1,4 +1,5 @@
-# Problem Set 1.7-10
+# Problem Set 2.5 - 7
+# Linear Regression
 
 
 import argparse
@@ -49,11 +50,16 @@ def perceptron_learning_algorithm(X, Y):
     return w, num_iterations
 
 
-def calc_disagreement(w_g, a, b, c, num_samples=TEST_SAMPLES):
+def linear_regression(X, Y):
+    w_g = np.linalg.inv(X.T @ X) @ X.T @ y
+    return w_g
+
+
+def calc_Error_out(w_g, a, b, c, num_samples=TEST_SAMPLES):
     X_sample, Y_f = generate_data(num_samples, a, b, c)
     Y_g = np.sign(X_sample.dot(w_g))
-    disagreement = np.mean(Y_f != Y_g)
-    return disagreement
+    Error_out = np.mean(Y_f != Y_g)
+    return Error_out
 
 
 def main():
@@ -62,22 +68,23 @@ def main():
     args = parser.parse_args()
 
     iterations_list = []
-    disagreement_probs = []
+    Error_out_list = []
+    w_matrix = np.array()
 
     for _ in range(RUNS):
         a, b, c = generate_target()
         X, Y = generate_data(args.points, a, b, c)
-        w_g, num_iterations = perceptron_learning_algorithm(X, Y)
-        disagreement_prob = calc_disagreement(w_g, a, b, c)
+        w_g = linear_regression(X, Y)
+        Error_out = calc_Error_out(w_g, a, b, c)
         iterations_list.append(num_iterations)
-        disagreement_probs.append(disagreement_prob)
+        Error_out_list.append(Error_out)
 
-    # Compute average iterations and disagreement probability over 1000 runs
+    # Compute average iterations and Error_out probability over 1000 runs
     avg_iterations = np.mean(iterations_list)
-    avg_disagreement_prob = np.mean(disagreement_probs)
+    avg_Error_out = np.mean(Error_out_list)
 
     print("Iterations:", avg_iterations)
-    print("Disagreement:", avg_disagreement_prob)
+    print("E_out estimate:", avg_Error_out)
 
 
 

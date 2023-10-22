@@ -1,3 +1,6 @@
+# Problem Set 2.1 - 2
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 
