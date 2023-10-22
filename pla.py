@@ -93,7 +93,7 @@ def main():
     y_vals = (-c - a*x_vals) / b
     plt.plot(x_vals, y_vals, 'k-', label='Target function f')
 
-    # plot the chosen hypothesis g
+    # plot the last chosen hypothesis g for visualization purposes
     y_vals_g = (-w_g[0] - w_g[1]*x_vals) / w_g[2]
     plt.plot(x_vals, y_vals_g, 'm--', label='Hypothesis g')
 
