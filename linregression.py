@@ -7,8 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-TRIALS            = 1000
-TEST_SAMPLES    = 1000
+TRIALS              = 1000
+TEST_SAMPLES        = 1000
 
 
 
@@ -37,13 +37,12 @@ def generate_data(N, a, b, c):
 ## Learning Algorithms ##
 #########################
 
-def perceptron_learning_algorithm(X, Y):
+def perceptron_learning_algorithm(X, Y, w_init=None):
     num_points = X.shape[0]
     dim = X.shape[1]
+    w = w_init if w_init is not None else np.zeros(dim)
 
-    w = np.zeros(dim)
-    num_iterations = 0
-
+    iterations = 0
     while True:
         predictions = np.sign(X.dot(w))
         misclassified = np.where(predictions != Y)[0]
@@ -52,16 +51,15 @@ def perceptron_learning_algorithm(X, Y):
             break
 
         random_misclassed_point = np.random.choice(misclassified)
-
         w += Y[random_misclassed_point] * X[random_misclassed_point]
-        num_iterations += 1
+        iterations += 1
 
-    return w, num_iterations
+    return w, iterations
 
 
 def linear_regression(X, Y):
-    w_g = np.linalg.inv(X.T @ X) @ X.T @ Y
-    return w_g
+    g = np.linalg.inv(X.T @ X) @ X.T @ Y
+    return g
 
 
 
@@ -69,18 +67,22 @@ def linear_regression(X, Y):
 ## Error Calculations ##
 ########################
 
-def calc_Error_in(w_g, X, Y):
-    Y_g = np.sign(X.dot(w_g))
+def calc_Error_in(g, X, Y):
+    Y_g = np.sign(X.dot(g))
     Error_in = np.mean(Y != Y_g)
     return Error_in
 
-def calc_Error_out(w_g, a, b, c, num_samples=TEST_SAMPLES):
+def calc_Error_out(g, a, b, c, num_samples=TEST_SAMPLES):
     X_sample, Y_f = generate_data(num_samples, a, b, c)
-    Y_g = np.sign(X_sample.dot(w_g))
+    Y_g = np.sign(X_sample.dot(g))
     Error_out = np.mean(Y_f != Y_g)
     return Error_out
 
 
+
+#################
+## Driver Code ##
+#################
 
 def main():
     parser = argparse.ArgumentParser(description="Perceptron Learning Algorithm")
@@ -95,20 +97,21 @@ def main():
     for i in range(TRIALS):
         a, b, c = generate_target()
         X, Y = generate_data(args.points, a, b, c)
-        w_regression = linear_regression(X, Y)
-        W[:,i] = w_regression
-        #iterations_list.append(num_iterations)
+        g_regression = linear_regression(X, Y)
+        W[:,i] = g_regression
+        w_g, iterations = perceptron_learning_algorithm(X, Y, g_regression.copy())
+        iterations_list.append(iterations)
 
-        Error_in_list.append(calc_Error_in(w_regression, X, Y))
-        Error_out_list.append(calc_Error_out(w_regression, a, b, c))
+        Error_in_list.append(calc_Error_in(g_regression, X, Y))
+        Error_out_list.append(calc_Error_out(g_regression, a, b, c))
 
-    # Compute average iterations and Error_out probability over 1000 runs
-    #avg_iterations = np.mean(iterations_list)
+    # Compute stats over 1000 runs
+    avg_iterations = np.mean(iterations_list)
     avg_Error_in = np.mean(Error_in_list)
     avg_Error_out = np.mean(Error_out_list)
 
-    #print("Iterations:", avg_iterations)
-    print("E_in actual:", avg_Error_in)
+    print("Iterations:", avg_iterations)
+    print(f"E_in actual: {avg_Error_in:.10f}")
     print("E_out estimate:", avg_Error_out)
 
 
@@ -126,7 +129,7 @@ def main():
     plt.plot(x_vals, y_vals, 'k-', label='Target function f')
 
     # plot the last chosen hypothesis g for visualization purpose
-    y_vals_g = (-w_regression[0] - w_regression[1]*x_vals) / w_regression[2]
+    y_vals_g = (-w_g[0] - w_g[1]*x_vals) / w_g[2]
     plt.plot(x_vals, y_vals_g, 'm--', label='Hypothesis g')
 
     plt.xlim(-1, 1)
