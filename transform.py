@@ -16,7 +16,7 @@ TEST_SAMPLES        = 1000
 ## Simulation ##
 ################
 
-def generate_target():
+def generate_linear_target():
     points = np.random.uniform(-1, 1, (2, 2))
     p0 = points[0]
     p1 = points[1]
@@ -24,6 +24,7 @@ def generate_target():
     b = p0[0] - p1[0]
     c = p1[0] * p0[1] - p1[1] * p0[0]
     return a, b, c
+
 
 def generate_data(N, a, b, c):
     X = np.random.uniform(-1, 1, (N, 2))
@@ -42,6 +43,26 @@ def generate_noisy_data(N, a, b, c):
     Y[noisy_indices] = -Y[noisy_indices]
     
     return X_with_bias, Y
+
+
+def generate_circular_data(N):
+    X = np.random.uniform(-1, 1, (N, 2))
+    X_with_bias = np.c_[np.ones(N), X]
+    Y = np.sign(X[:, 0]**2 + X[:, 1]**2 - 0.6)
+    return X_with_bias, Y
+
+def generate_noisy_circular_data(N):
+    X = np.random.uniform(-1, 1, (N, 2))
+    X_with_bias = np.c_[np.ones(N), X]
+    Y = np.sign(X[:, 0]**2 + X[:, 1]**2 - 0.6)
+    
+    # Introduce noise by flipping the output value for 10% of the sample
+    num_noisy_samples = int(0.1 * N)
+    noisy_indices = np.random.choice(N, num_noisy_samples, replace=False)
+    Y[noisy_indices] = -Y[noisy_indices]
+    
+    return X_with_bias, Y
+
 
 
 #########################
@@ -89,6 +110,11 @@ def calc_Error_out(g, a, b, c, num_samples=TEST_SAMPLES):
     Error_out = np.mean(Y_f != Y_g)
     return Error_out
 
+def calc_Error_out(g, num_samples=TEST_SAMPLES):
+    X_sample, Y_f = generate_noisy_circular_data(num_samples)
+    Y_g = np.sign(X_sample.dot(g))
+    Error_out = np.mean(Y_f != Y_g)
+    return Error_out
 
 
 #################
@@ -106,8 +132,7 @@ def main():
     W = np.zeros((3, TRIALS))
 
     for i in range(TRIALS):
-        a, b, c = generate_target()
-        X, Y = generate_noisy_data(args.points, a, b, c)
+        X, Y = generate_noisy_circular_data(args.points)
 
         # regression
         g_regression = linear_regression(X, Y)
@@ -118,16 +143,14 @@ def main():
         #iterations_list.append(iterations)
 
         Error_in_list.append(calc_Error_in(g_regression, X, Y))
-        Error_out_list.append(calc_Error_out(g_regression, a, b, c))
+        Error_out_list.append(calc_Error_out(g_regression))
 
     # Compute stats over 1000 runs
-    avg_iterations = np.mean(iterations_list)
     avg_Error_in = np.mean(Error_in_list)
     avg_Error_out = np.mean(Error_out_list)
 
-    print("Iterations:", avg_iterations)
     print(f"E_in actual: {avg_Error_in:.10f}")
-    print("E_out estimate:", avg_Error_out)
+    #print("E_out estimate:", avg_Error_out)
 
 
 
@@ -136,22 +159,32 @@ def main():
     #############################################################
 
     # plot data points
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(8, 8))
     plt.scatter(X[:, 1][Y == 1], X[:, 2][Y == 1], color='blue', marker='o', label='Class +1')
     plt.scatter(X[:, 1][Y == -1], X[:, 2][Y == -1], color='red', marker='x', label='Class -1')
 
-    # plot target function
-    x_vals = np.array([-1, 1])
-    y_vals = (-c - a*x_vals) / b
-    plt.plot(x_vals, y_vals, 'k-', label='Target function f')
+    # plot linear target function
+    #line_x1_values = np.array([-1, 1])
+    #line_x2_values = (-c - a*line_x1_values) / b
+    #plt.plot(line_x1_values, line_x2_values, 'k-', label='Target function f')
+
+    
+    # Generate theta values
+    theta = np.linspace(0, 2*np.pi, 100)
+
+    # Compute x1 and x2 values for the circle
+    radius = np.sqrt(0.6)
+    circle_x1_values = radius * np.cos(theta)
+    circle_x2_values = radius * np.sin(theta)
+
+    # Plot the circle
+    #plt.figure(figsize=(8, 8))
+    plt.plot(circle_x1_values, circle_x2_values, '-r', label='x1^2 + x2^2 = 0.6')
 
     # plot the last chosen regression line
-    #y_vals_regression = (-g_regression[0] - g_regression[1]*x_vals) / g_regression[2]
-    #plt.plot(x_vals, y_vals_regression, 'm--', label='Hypothesis g')
-
-    # plot the last chosen hypothesis g for visualization purpose
-    #y_vals_g = (-g_perceptron[0] - g_perceptron[1]*x_vals) / g_perceptron[2]
-    #plt.plot(x_vals, y_vals_g, 'm--', label='Hypothesis g')
+    x_vals = np.array([-1, 1])
+    y_vals_regression = (-g_regression[0] - g_regression[1]*x_vals) / g_regression[2]
+    plt.plot(x_vals, y_vals_regression, 'm--', label='Hypothesis g')
 
     plt.xlim(-1, 1)
     plt.ylim(-1, 1)
