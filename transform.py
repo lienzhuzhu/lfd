@@ -1,4 +1,4 @@
-# Problem Set 2.5 - 7
+# Problem Set 2.8 - 10
 # Linear Regression
 
 
@@ -107,15 +107,15 @@ def main():
 
     for i in range(TRIALS):
         a, b, c = generate_target()
-        X, Y = generate_data(args.points, a, b, c)
+        X, Y = generate_noisy_data(args.points, a, b, c)
 
         # regression
         g_regression = linear_regression(X, Y)
         W[:,i] = g_regression
 
         # pla
-        g_perceptron, iterations = perceptron_learning_algorithm(X, Y, g_regression.copy())
-        iterations_list.append(iterations)
+        #g_perceptron, iterations = perceptron_learning_algorithm(X, Y, g_regression.copy())
+        #iterations_list.append(iterations)
 
         Error_in_list.append(calc_Error_in(g_regression, X, Y))
         Error_out_list.append(calc_Error_out(g_regression, a, b, c))
@@ -145,9 +145,13 @@ def main():
     y_vals = (-c - a*x_vals) / b
     plt.plot(x_vals, y_vals, 'k-', label='Target function f')
 
+    # plot the last chosen regression line
+    #y_vals_regression = (-g_regression[0] - g_regression[1]*x_vals) / g_regression[2]
+    #plt.plot(x_vals, y_vals_regression, 'm--', label='Hypothesis g')
+
     # plot the last chosen hypothesis g for visualization purpose
-    y_vals_g = (-g_perceptron[0] - g_perceptron[1]*x_vals) / g_perceptron[2]
-    plt.plot(x_vals, y_vals_g, 'm--', label='Hypothesis g')
+    #y_vals_g = (-g_perceptron[0] - g_perceptron[1]*x_vals) / g_perceptron[2]
+    #plt.plot(x_vals, y_vals_g, 'm--', label='Hypothesis g')
 
     plt.xlim(-1, 1)
     plt.ylim(-1, 1)
