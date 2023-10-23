@@ -99,7 +99,7 @@ def main():
         X, Y = generate_data(args.points, a, b, c)
         g_regression = linear_regression(X, Y)
         W[:,i] = g_regression
-        w_g, iterations = perceptron_learning_algorithm(X, Y, g_regression.copy())
+        g_perceptron, iterations = perceptron_learning_algorithm(X, Y, g_regression.copy())
         iterations_list.append(iterations)
 
         Error_in_list.append(calc_Error_in(g_regression, X, Y))
@@ -116,7 +116,9 @@ def main():
 
 
 
+    #############################################################
     ## Plot data and hyperplanes for the last experiment trial ##
+    #############################################################
 
     # plot data points
     plt.figure(figsize=(8, 6))
@@ -129,7 +131,7 @@ def main():
     plt.plot(x_vals, y_vals, 'k-', label='Target function f')
 
     # plot the last chosen hypothesis g for visualization purpose
-    y_vals_g = (-w_g[0] - w_g[1]*x_vals) / w_g[2]
+    y_vals_g = (-g_perceptron[0] - g_perceptron[1]*x_vals) / g_perceptron[2]
     plt.plot(x_vals, y_vals_g, 'm--', label='Hypothesis g')
 
     plt.xlim(-1, 1)
