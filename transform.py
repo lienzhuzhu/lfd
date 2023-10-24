@@ -102,6 +102,7 @@ def linear_regression(X, Y):
 
 def print_average_weights(weight_matrix):
     avg_weights = np.mean(weight_matrix, axis=0)
+    print("Average Weights", end='\t')
     print(", ".join(map(str, avg_weights)))
 
 
@@ -144,8 +145,8 @@ def main():
     W = np.zeros((TRIALS, 6))
 
     for i in range(TRIALS):
-        X, Y = generate_noisy_circular_data(args.points)
-        X, Y = generate_transformed_noisy_circular_data(X, Y)
+        X_original, Y_original = generate_noisy_circular_data(args.points)
+        X, Y = generate_transformed_noisy_circular_data(X_original, Y_original)
 
         g_regression = linear_regression(X, Y)
         W[i,:] = g_regression
