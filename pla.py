@@ -50,8 +50,8 @@ def perceptron_learning_algorithm(X, Y):
 
 
 def calc_disagreement(w_g, a, b, c, num_samples=TEST_SAMPLES):
-    X_sample, Y_f = generate_data(num_samples, a, b, c)
-    Y_g = np.sign(X_sample.dot(w_g))
+    X_test, Y_f = generate_data(num_samples, a, b, c)
+    Y_g = np.sign(X_test.dot(w_g))
     disagreement = np.mean(Y_f != Y_g)
     return disagreement
 

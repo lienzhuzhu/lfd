@@ -84,8 +84,8 @@ def calc_Error_in(g, X, Y):
     return Error_in
 
 def calc_Error_out(g, a, b, c, num_samples=TEST_SAMPLES):
-    X_sample, Y_f = generate_data(num_samples, a, b, c)
-    Y_g = np.sign(X_sample.dot(g))
+    X_test, Y_f = generate_data(num_samples, a, b, c)
+    Y_g = np.sign(X_test.dot(g))
     Error_out = np.mean(Y_f != Y_g)
     return Error_out
 

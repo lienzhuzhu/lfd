@@ -63,7 +63,7 @@ def generate_noisy_circular_data(N):
     
     return X_with_bias, Y
 
-def generate_transformed_noisy_circular_data(N, X, Y):
+def generate_transformed_noisy_circular_data(X, Y):
     x1 = X[:, 1]
     x2 = X[:, 2]
     X_transformed = np.c_[X, x1*x2, x1**2, x2**2]
@@ -100,8 +100,9 @@ def linear_regression(X, Y):
     g = np.linalg.inv(X.T @ X) @ X.T @ Y
     return g
 
-def print_weights(g):
-    pass
+def print_average_weights(weight_matrix):
+    avg_weights = np.mean(weight_matrix, axis=0)
+    print(", ".join(map(str, avg_weights)))
 
 
 
@@ -115,13 +116,13 @@ def calc_Error_in(g, X, Y):
     return Error_in
 
 def calc_Error_out(g, a, b, c, num_samples=TEST_SAMPLES):
-    X_sample, Y_f = generate_data(num_samples, a, b, c)
-    Y_g = np.sign(X_sample.dot(g))
+    X_test, Y_f = generate_data(num_samples, a, b, c)
+    Y_g = np.sign(X_test.dot(g))
     Error_out = np.mean(Y_f != Y_g)
     return Error_out
 
 def calc_Error_out(g, num_samples=TEST_SAMPLES):
-    X_sample, Y_f = generate_noisy_circular_data(num_samples)
+    X_test, Y_f = generate_noisy_circular_data(num_samples)
     Error_out = np.mean(Y_f != Y_g)
     return Error_out
 
@@ -138,22 +139,25 @@ def main():
     iterations_list = []
     Error_in_list = []
     Error_out_list = []
+    W = np.zeros((TRIALS, 6))
 
     for i in range(TRIALS):
         X, Y = generate_noisy_circular_data(args.points)
+        X, Y = generate_transformed_noisy_circular_data(X, Y)
 
-        # regression
         g_regression = linear_regression(X, Y)
+        W[i,:] = g_regression
 
         Error_in_list.append(calc_Error_in(g_regression, X, Y))
-        #Error_out_list.append(calc_Error_out(g_regression))
+        Error_out_list.append(calc_Error_out(g_regression))
 
-    # Compute stats over 1000 runs
+    # Compute stats from the experiment
     avg_Error_in = np.mean(Error_in_list)
     avg_Error_out = np.mean(Error_out_list)
 
     print(f"E_in actual: {avg_Error_in:.10f}")
     print("E_out estimate:", avg_Error_out)
+    print_average_weights(W)
 
 
 
@@ -172,11 +176,6 @@ def main():
     circle_x1_values = radius * np.cos(theta)
     circle_x2_values = radius * np.sin(theta)
     plt.plot(circle_x1_values, circle_x2_values, '-r', label='x1^2 + x2^2 = 0.6')
-
-    ## Plot the last chosen regression line ##
-    x_vals = np.array([-1, 1])
-    y_vals_regression = (-g_regression[0] - g_regression[1]*x_vals) / g_regression[2]
-    plt.plot(x_vals, y_vals_regression, 'm--', label='Hypothesis g')
 
     ## Global Plot Parameters ##
     plt.xlim(-1, 1)
