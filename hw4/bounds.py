@@ -28,7 +28,7 @@ def Devroye(N):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Perceptron Learning Algorithm")
+    parser = argparse.ArgumentParser(description="Generalization Bound Calculator")
     parser.add_argument('-N', '--points', type=int, help='Number of sample points', required=True)
     args = parser.parse_args()
 
