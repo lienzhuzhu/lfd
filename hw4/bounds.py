@@ -39,7 +39,7 @@ def main():
 
     plt.figure(figsize=(14, 8))
 
-    x_vals = numpy.arange(-1000, 12000, 0.1)
+    x_vals = numpy.arange(-1000, 12000, 0.25)
 
     y_Hoeffding = []
     y_Rademacher = []
@@ -57,7 +57,7 @@ def main():
     plt.plot(x_vals, y_Parrondo, color='blue', label='Parrondo')
     plt.plot(x_vals, y_Devroye, color='red', label='Devroye')
 
-    plt.xlim(-1000, 12000)
+    plt.xlim(-100, 1200)
     plt.legend()
     plt.xlabel("N")
     plt.ylabel("Bound")
