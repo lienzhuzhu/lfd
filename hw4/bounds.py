@@ -37,7 +37,32 @@ def main():
     print("Parrondo and Van den Broek\t", Parrondo(args.points))
     print("Devroye\t\t\t\t", Devroye(args.points))
 
+    plt.figure(figsize=(14, 8))
 
+    x_vals = numpy.arange(-1000, 12000, 0.1)
+
+    y_Hoeffding = []
+    y_Rademacher = []
+    y_Parrondo = []
+    y_Devroye = []
+
+    for x in x_vals:
+        y_Hoeffding.append(Hoeffding(x))
+        y_Rademacher.append(Rademacher(x))
+        y_Parrondo.append(Parrondo(x))
+        y_Devroye.append(Devroye(x))
+
+    plt.plot(x_vals, y_Hoeffding, color='black', label='Hoeffding VC')
+    plt.plot(x_vals, y_Rademacher, color='purple', label='Rademacher')
+    plt.plot(x_vals, y_Parrondo, color='blue', label='Parrondo')
+    plt.plot(x_vals, y_Devroye, color='red', label='Devroye')
+
+    plt.xlim(-1000, 12000)
+    plt.legend()
+    plt.xlabel("N")
+    plt.ylabel("Bound")
+    plt.yscale("log")
+    plt.show()
             
 
 if __name__ == "__main__":
