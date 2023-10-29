@@ -31,6 +31,18 @@ def generate_data(N, a, b, c):
     Y = np.sign(a * X[:, 0] + b * X[:, 1] + c)
     return X_with_bias, Y
 
+def generate_noisy_data(N, a, b, c):
+    X = np.random.uniform(-1, 1, (N, 2))
+    X_with_bias = np.c_[np.ones(N), X]
+    Y = np.sign(a * X[:, 0] + b * X[:, 1] + c)
+
+    # Introduce noise by flipping the output value for 10% of the sample
+    num_noisy_samples = int(0.1 * N)
+    noisy_indices = np.random.choice(N, num_noisy_samples, replace=False)
+    Y[noisy_indices] = -Y[noisy_indices]
+    
+    return X_with_bias, Y
+
 
 #########################
 ## Learning Algorithms ##
