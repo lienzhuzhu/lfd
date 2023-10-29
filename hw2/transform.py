@@ -88,12 +88,6 @@ def calc_Error_in(g, X, Y):
     Error_in = np.mean(Y != Y_g)
     return Error_in
 
-def calc_Error_out(g, a, b, c, num_samples=TEST_SAMPLES):
-    X_test, Y_f = generate_data(num_samples, a, b, c)
-    Y_g = np.sign(X_test.dot(g))
-    Error_out = np.mean(Y_f != Y_g)
-    return Error_out
-
 def calc_Error_out(g, num_samples=TEST_SAMPLES):
     X_test, Y_f = generate_noisy_circular_data(num_samples)
     Y_g = np.sign(X_test.dot(g))
