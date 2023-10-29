@@ -145,6 +145,10 @@ def main():
     y_vals = (-c - a*x_vals) / b
     plt.plot(x_vals, y_vals, 'k-', label='Target function f')
 
+    # plot the last regression line
+    y_vals_regression = (-g_regression[0] - g_regression[1]*x_vals) / g_regression[2]
+    plt.plot(x_vals, y_vals_regression, 'r-', label='Regression g')
+    
     # plot the last chosen hypothesis g for visualization purpose
     y_vals_g = (-g_perceptron[0] - g_perceptron[1]*x_vals) / g_perceptron[2]
     plt.plot(x_vals, y_vals_g, 'm--', label='Hypothesis g')

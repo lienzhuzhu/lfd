@@ -1,5 +1,5 @@
 # Problem Set 2.8 - 10
-# Linear Regression
+# Linear Regression with transformation and noisy data
 
 
 import argparse
@@ -124,6 +124,12 @@ def calc_Error_out(g, a, b, c, num_samples=TEST_SAMPLES):
 
 def calc_Error_out(g, num_samples=TEST_SAMPLES):
     X_test, Y_f = generate_noisy_circular_data(num_samples)
+    Y_g = np.sign(X_test.dot(g))
+    Error_out = np.mean(Y_f != Y_g)
+    return Error_out
+
+def calc_Error_out_transformed(g, num_samples=TEST_SAMPLES):
+    X_test, Y_f = generate_noisy_circular_data(num_samples)
     X_test, Y_f = generate_transformed_noisy_circular_data(X_test, Y_f)
     Y_g = np.sign(X_test.dot(g))
     Error_out = np.mean(Y_f != Y_g)
@@ -137,22 +143,36 @@ def calc_Error_out(g, num_samples=TEST_SAMPLES):
 def main():
     parser = argparse.ArgumentParser(description="Perceptron Learning Algorithm")
     parser.add_argument('-N', '--points', type=int, help='Number of sample data points to generate', required=True)
+    parser.add_argument('--transform', action='store_true', help='Transform the data points')
     args = parser.parse_args()
 
     iterations_list = []
     Error_in_list = []
     Error_out_list = []
-    W = np.zeros((TRIALS, 6))
+
+    if args.transform:
+        W = np.zeros((TRIALS, 6))
+    else:
+        W = np.zeros((TRIALS, 3))
 
     for i in range(TRIALS):
         X_original, Y_original = generate_noisy_circular_data(args.points)
         X, Y = generate_transformed_noisy_circular_data(X_original, Y_original)
 
-        g_regression = linear_regression(X, Y)
+        if args.transform:
+            g_regression = linear_regression(X, Y)
+        else:
+            g_regression = linear_regression(X_original, Y_original)
+
         W[i,:] = g_regression
 
-        Error_in_list.append(calc_Error_in(g_regression, X, Y))
-        Error_out_list.append(calc_Error_out(g_regression))
+        if args.transform:
+            Error_in_list.append(calc_Error_in(g_regression, X, Y))
+            Error_out_list.append(calc_Error_out_transformed(g_regression))
+        else:
+            Error_in_list.append(calc_Error_in(g_regression, X_original, Y_original))
+            Error_out_list.append(calc_Error_out(g_regression))
+
 
     # Compute stats from the experiment
     avg_Error_in = np.mean(Error_in_list)
@@ -168,8 +188,9 @@ def main():
     ## Plot data and hyperplanes for the last experiment trial ##
     #############################################################
 
-    ## Plot data points ##
+    ## Plot original data points ##
     plt.figure(figsize=(8, 8))
+    # NOTE: the original data set is found within the first two columns of the transformed set
     plt.scatter(X[:, 1][Y == 1], X[:, 2][Y == 1], color='blue', marker='o', label='Class +1')
     plt.scatter(X[:, 1][Y == -1], X[:, 2][Y == -1], color='red', marker='x', label='Class -1')
 
@@ -179,6 +200,12 @@ def main():
     circle_x1_values = radius * np.cos(theta)
     circle_x2_values = radius * np.sin(theta)
     plt.plot(circle_x1_values, circle_x2_values, '-r', label='x1^2 + x2^2 = 0.6')
+
+    ## Plot last regression line ##
+    if not args.transform:
+        x_vals = np.array([-1, 1])
+        y_vals_g = (-g_regression[0] - g_regression[1]*x_vals) / g_regression[2]
+        plt.plot(x_vals, y_vals_g, 'k--', label='Regression g')
 
     ## Global Plot Parameters ##
     plt.xlim(-1, 1)
