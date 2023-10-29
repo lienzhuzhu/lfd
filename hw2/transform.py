@@ -199,13 +199,13 @@ def main():
     radius = np.sqrt(0.6)
     circle_x1_values = radius * np.cos(theta)
     circle_x2_values = radius * np.sin(theta)
-    plt.plot(circle_x1_values, circle_x2_values, '-r', label='x1^2 + x2^2 = 0.6')
+    plt.plot(circle_x1_values, circle_x2_values, 'k-', label='x1^2 + x2^2 = 0.6')
 
     ## Plot last regression line ##
     if not args.transform:
         x_vals = np.array([-1, 1])
         y_vals_g = (-g_regression[0] - g_regression[1]*x_vals) / g_regression[2]
-        plt.plot(x_vals, y_vals_g, 'k--', label='Regression g')
+        plt.plot(x_vals, y_vals_g, 'r--', label='Regression g')
 
     ## Global Plot Parameters ##
     plt.xlim(-1, 1)
