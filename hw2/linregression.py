@@ -73,6 +73,39 @@ def linear_regression(X, Y):
     return g
 
 
+def perceptron_learning_step(X, Y, w):
+
+    predictions = np.sign(X.dot(w))
+    misclassified = np.where(predictions != Y)[0]
+
+    if len(misclassified) == 0:
+        return w
+
+    random_misclassed_point = np.random.choice(misclassified)
+    w += Y[random_misclassed_point] * X[random_misclassed_point]
+
+    return w
+    
+
+
+def pocket_learning(X, Y, w_init=None, iterations=100):
+    num_points = X.shape[0]
+    dim = X.shape[1]
+    w_optimal = w_init if w_init is not None else np.zeros(dim)
+    optimal_Error_in = calc_Error_in(w_optimal, X, Y)
+
+    for i in range(iterations):
+        w_candidate = perceptron_learning_step(X, Y, w_optimal)
+
+        if w_candidate.all() == w_optimal.all():
+            return w_optimal
+
+        candidate_Error_in = calc_Error_in(w_candidate, X, Y)
+        w_optimal = w_candidate if candidate_Error_in < optimal_Error_in else w_optimal
+
+    return w_optimal
+
+
 
 ########################
 ## Error Calculations ##
@@ -98,6 +131,7 @@ def calc_Error_out(g, a, b, c, num_samples=TEST_SAMPLES):
 def main():
     parser = argparse.ArgumentParser(description="Perceptron Learning Algorithm")
     parser.add_argument('-N', '--points', type=int, help='Number of sample data points to generate', required=True)
+    parser.add_argument('--noisy', action='store_true', help='Indicate if you would like noisy data')
     args = parser.parse_args()
 
     iterations_list = []
@@ -113,22 +147,24 @@ def main():
         g_regression = linear_regression(X, Y)
         W[:,i] = g_regression
 
-        # pla
-        g_perceptron, iterations = perceptron_learning_algorithm(X, Y, g_regression.copy())
-        iterations_list.append(iterations)
+        if args.noisy:
+            g_pocket = pocket_learning(X, Y, g_regression.copy())
+        else:
+            g_perceptron, iterations = perceptron_learning_algorithm(X, Y, g_regression.copy())
+            iterations_list.append(iterations)
 
         Error_in_list.append(calc_Error_in(g_regression, X, Y))
         Error_out_list.append(calc_Error_out(g_regression, a, b, c))
 
     # Compute stats over 1000 runs
-    avg_iterations = np.mean(iterations_list)
     avg_Error_in = np.mean(Error_in_list)
     avg_Error_out = np.mean(Error_out_list)
-
-    print("Iterations:", avg_iterations)
     print(f"E_in actual: {avg_Error_in:.10f}")
     print("E_out estimate:", avg_Error_out)
 
+    if not args.noisy:
+        avg_iterations = np.mean(iterations_list)
+        print("Iterations:", avg_iterations)
 
 
     #############################################################
@@ -149,9 +185,9 @@ def main():
     y_vals_regression = (-g_regression[0] - g_regression[1]*x_vals) / g_regression[2]
     plt.plot(x_vals, y_vals_regression, 'r-', label='Regression g')
     
-    # plot the last chosen hypothesis g for visualization purpose
-    y_vals_g = (-g_perceptron[0] - g_perceptron[1]*x_vals) / g_perceptron[2]
-    plt.plot(x_vals, y_vals_g, 'm--', label='Hypothesis g')
+    if not args.noisy:
+        y_vals_g = (-g_perceptron[0] - g_perceptron[1]*x_vals) / g_perceptron[2]
+        plt.plot(x_vals, y_vals_g, 'm--', label='Hypothesis g')
 
     plt.xlim(-1, 1)
     plt.ylim(-1, 1)
