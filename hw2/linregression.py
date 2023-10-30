@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-TRIALS              = 1000
+TRIALS              = 20
 TEST_SAMPLES        = 1000
 
 
@@ -88,16 +88,16 @@ def perceptron_learning_step(X, Y, w):
     
 
 
-def pocket_learning(X, Y, w_init=None, iterations=100):
+def pocket_learning(X, Y, w_init=None, iterations=10000):
     num_points = X.shape[0]
     dim = X.shape[1]
     w_optimal = w_init if w_init is not None else np.zeros(dim)
-    optimal_Error_in = calc_Error_in(w_optimal, X, Y)
 
     for i in range(iterations):
-        w_candidate = perceptron_learning_step(X, Y, w_optimal)
+        optimal_Error_in = calc_Error_in(w_optimal, X, Y)
+        w_candidate = perceptron_learning_step(X, Y, w_optimal.copy())
 
-        if w_candidate.all() == w_optimal.all():
+        if np.array_equal(w_candidate, w_optimal):
             return w_optimal
 
         candidate_Error_in = calc_Error_in(w_candidate, X, Y)
@@ -141,7 +141,11 @@ def main():
 
     for i in range(TRIALS):
         a, b, c = generate_target()
-        X, Y = generate_data(args.points, a, b, c)
+
+        if args.noisy:
+            X, Y = generate_noisy_data(args.points, a, b, c)
+        else:
+            X, Y = generate_data(args.points, a, b, c)
 
         # regression
         g_regression = linear_regression(X, Y)
@@ -185,7 +189,10 @@ def main():
     y_vals_regression = (-g_regression[0] - g_regression[1]*x_vals) / g_regression[2]
     plt.plot(x_vals, y_vals_regression, 'r-', label='Regression g')
     
-    if not args.noisy:
+    if args.noisy:
+        y_vals_pocket = (-g_pocket[0] - g_pocket[1]*x_vals) / g_pocket[2]
+        plt.plot(x_vals, y_vals_pocket, 'm--', label='Pocket g')
+    else:
         y_vals_g = (-g_perceptron[0] - g_perceptron[1]*x_vals) / g_perceptron[2]
         plt.plot(x_vals, y_vals_g, 'm--', label='Hypothesis g')
 
