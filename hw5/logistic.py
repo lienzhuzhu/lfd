@@ -2,7 +2,9 @@
 # Logistic Regression and Stochastic Gradient Descent Learning Algorithm
 
 
-import numpy
+import numpy as np
+import matplotlib.pyplot as plt
+import argparse
 
 
 def generate_target():
