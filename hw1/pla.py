@@ -102,7 +102,7 @@ def main():
     plt.axhline(0, color='black',linewidth=0.5)
     plt.axvline(0, color='black',linewidth=0.5)
     plt.legend()
-    plt.title("Sample Data and Target Function f")
+    plt.title("Perceptron Learning Algorithm")
     plt.xlabel('x1')
     plt.ylabel('x2')
     plt.grid(True)
