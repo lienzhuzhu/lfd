@@ -31,7 +31,7 @@ def generate_data(N, a, b, c):
 
 
 def calc_gradient(w, x, y):
-    return -y*( 1 / (1 + np.exp(y * np.dot(w, x)) ) ) * x
+    return -y*( 1 / (1 + np.exp(y * w.dot(x)) ) ) * x
 
 def logistic_regression(X, Y):
     num_points = X.shape[0]
@@ -53,11 +53,8 @@ def logistic_regression(X, Y):
 def calc_E_out(w_g, a, b, c, num_samples=TEST_SAMPLES):
     X_test, Y_test = generate_data(num_samples, a, b, c)
 
-    sum_total_E = 0
-    for x, y in zip(X_test, Y_test):
-        sum_total_E += np.log(1 + np.exp(-1*y * np.dot(w_g, x)))
+    E_out = np.mean(np.log(1 + np.exp(-1*Y_test * X_test.dot(w_g))))
 
-    E_out = sum_total_E / num_samples
 
     return E_out
 
