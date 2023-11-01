@@ -52,10 +52,7 @@ def logistic_regression(X, Y):
 
 def calc_E_out(w_g, a, b, c, num_samples=TEST_SAMPLES):
     X_test, Y_test = generate_data(num_samples, a, b, c)
-
     E_out = np.mean(np.log(1 + np.exp(-1*Y_test * X_test.dot(w_g))))
-
-
     return E_out
 
 
