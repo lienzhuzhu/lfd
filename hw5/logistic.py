@@ -51,9 +51,14 @@ def logistic_regression(X, Y):
     return w, epoch
 
 def calc_E_out(w_g, a, b, c, num_samples=TEST_SAMPLES):
-    X_test, Y_f = generate_data(num_samples, a, b, c)
-    Y_g = np.sign(X_test.dot(w_g))
-    E_out = np.mean(Y_f != Y_g)
+    X_test, Y_test = generate_data(num_samples, a, b, c)
+
+    sum_total_E = 0
+    for x, y in zip(X_test, Y_test):
+        sum_total_E += np.log(1 + np.exp(-1*y * np.dot(w_g, x)))
+
+    E_out = sum_total_E / num_samples
+
     return E_out
 
 
@@ -69,14 +74,14 @@ def main():
         a, b, c = generate_target()
         X, Y = generate_data(args.points, a, b, c)
         w_logistic, epochs = logistic_regression(X, Y)
-        epochs_list.append(epochs)
         list_of_E_outs.append(calc_E_out(w_logistic, a, b, c))
+        epochs_list.append(epochs)
 
-    avg_epochs = np.mean(epochs_list)
     avg_E_out = np.mean(list_of_E_outs)
+    avg_epochs = np.mean(epochs_list)
 
-    print("Epochs:\t", avg_epochs)
     print("E_out:\t", avg_E_out)
+    print("Epochs:\t", avg_epochs)
 
 
     # plot data points
