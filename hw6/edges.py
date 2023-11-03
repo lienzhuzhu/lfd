@@ -24,9 +24,9 @@ solution = minimize(objective, L0, args=(-1.0,), bounds=bnds, constraints=cons)
 
 # Output the results
 if solution.success:
-    print("L1 = ", solution.x[0])
-    print("L2 = ", solution.x[1])
-    print("Z = ", -1 * solution.fun)
+    print("L1 = ", round(solution.x[0]))
+    print("L2 = ", round(solution.x[1]))
+    print("Z = ", round(-1 * solution.fun))
 else:
     print("Optimization failed:", solution.message)
 
