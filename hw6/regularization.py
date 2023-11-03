@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 
 TRAIN_DATA  = "./data/in.dta"
 TEST_DATA   = "./data/out.dta"
-K           = -3
 
 
 #######################
