@@ -6,8 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-TRAIN_DATA  = "./hw6/data/in.dta"
-TEST_DATA   = "./hw6/data/out.dta"
+TRAIN_DATA  = "./data/in.dta"
+TEST_DATA   = "./data/out.dta"
 K           = -3
 
 
