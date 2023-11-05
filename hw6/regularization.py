@@ -63,7 +63,6 @@ def calc_Error(g, X, Y):
 
 def main():
 
-    E_in_list, E_out_list = [], []
     K_list = [k for k in range(-3, 4)]
 
     X_train, Y_train = load_data(TRAIN_DATA)
