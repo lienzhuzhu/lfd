@@ -84,7 +84,7 @@ def main():
         E_out_10 = calc_Error(w, X_test, Y_test)
 
         #print(f"Q = {Q},\tE_val = {E_val:.40f} E_out = {E_out:.40f}")
-        print(f"Q = {Q}:\tK = 10. E_val = {E_val_25:.10f} E_out = {E_out_25:.10f}\tK = 25: E_val = {E_val_10:.10f} E_out = {E_out_10:.10f}")
+        print(f"Q = {Q}:\tK = 10. E_val = {E_val_25:.3f} E_out = {E_out_25:.3f}\tK = 25: E_val = {E_val_10:.3f} E_out = {E_out_10:.3f}")
 
 
 
