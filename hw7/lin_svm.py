@@ -6,6 +6,7 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import svm
+from cvxopt import matrix, solvers
 
 
 
@@ -68,9 +69,27 @@ def svm_libsvm(X, Y):
     model.fit(X, Y)
     return model
 
-def svm_qp(X, Y):
-    pass
+def svm_primal(X, Y):
+    N, D = X.shape
+    P = matrix(np.diag([0] + [1.0] * D))
+    q = matrix(np.zeros(D + 1))
+    G = matrix(-np.hstack((Y.reshape(-1,1), Y.reshape(-1,1) * X)))
+    h = matrix(-np.ones((N, 1)))
 
+    solution = solvers.qp(P, q, G, h, options={'show_progress': False})
+    variables = np.array(solution['x']).flatten()
+    b = variables[0]
+    w = variables[1:]
+    margins = Y * (X.dot(w) + b)
+
+    threshold = 1e-5
+    support_vector_indices = np.where(np.abs(margins - 1) <= threshold)[0]
+    num_support_vectors = len(support_vector_indices)
+
+    return solution, num_support_vectors
+
+def svm_dual(X, Y):
+    pass
 
 
 
@@ -78,13 +97,18 @@ def svm_qp(X, Y):
 ## Error Calculations ##
 ########################
 
-def calc_E_out(g, model, a, b, c, num_samples=TEST_SAMPLES):
+def calc_E_out(g, model, primal, a, b, c, num_samples=TEST_SAMPLES):
     X_test, X_test_aug, Y_f = generate_data(num_samples, a, b, c)
     Y_pla = np.sign(X_test_aug.dot(g))
     Y_svm = model.predict(X_test)
+    Y_primal = np.sign(X_test_aug.dot(np.array(primal['x'])).flatten())
+
     pla_E_out = np.mean(Y_f != Y_pla)
     svm_E_out = np.mean(Y_f != Y_svm)
-    return pla_E_out, svm_E_out
+    primal_E_out = np.mean(Y_f != Y_primal)
+
+    return pla_E_out, svm_E_out, primal_E_out
+
 
 
 #################
@@ -98,8 +122,11 @@ def main():
 
     pla_E_out_list = []
     svm_E_out_list = []
+    primal_E_out_list = []
     support_vectors = []
+    primal_support_vectors = []
     svm_wins = 0
+    primal_wins = 0
 
     for i in range(TRIALS):
         a, b, c = generate_target()
@@ -107,17 +134,31 @@ def main():
 
         g_perceptron, _ = perceptron_learning_algorithm(X_aug, Y)
         model = svm_libsvm(X, Y)
-        support_vectors.append(sum(model.n_support_))
+        primal, num_primal_support_vectors = svm_primal(X, Y)
 
-        pla_E_out, svm_E_out = calc_E_out(g_perceptron, model, a, b, c)
+        support_vectors.append(sum(model.n_support_))
+        primal_support_vectors.append(num_primal_support_vectors)
+
+        pla_E_out, svm_E_out, primal_E_out = calc_E_out(g_perceptron, model, primal, a, b, c)
+
         pla_E_out_list.append(pla_E_out)
         svm_E_out_list.append(svm_E_out)
+        primal_E_out_list.append(primal_E_out)
+
         svm_wins += svm_E_out < pla_E_out
+        primal_wins += primal_E_out < pla_E_out
 
     print("PLA E_out:\t\t", np.mean(pla_E_out_list))
     print("SVM E_out:\t\t", np.mean(svm_E_out_list))
-    print("Support Vectors:\t", np.mean(support_vectors))
-    print("SVM won", svm_wins / TRIALS, "times")
+    print("Primal E_out:\t\t", np.mean(primal_E_out_list))
+    print()
+
+    print("Support Vectors:\t", np.mean(support_vectors), "support vectors")
+    print("Primal Vectors:\t\t", np.mean(primal_support_vectors), "support vectors")
+    print()
+
+    print("SVM won\t\t\t", svm_wins / TRIALS, "times")
+    print("Primal won\t\t", primal_wins / TRIALS, "times")
 
 
 
@@ -139,7 +180,13 @@ def main():
     w = model.coef_[0]
     b = model.intercept_[0]
     y_vals_svm = (-b - w[0]*x_vals) / w[1]
-    plt.plot(x_vals, y_vals_svm, 'r--', label='SVM hyperplane')
+    plt.plot(x_vals, y_vals_svm, 'y.-', label='SVM hyperplane')
+
+    # plot the last primal SVM line
+    primal_g = np.array(primal['x']).flatten()
+    y_vals_primal = (-primal_g[0] - primal_g[1]*x_vals) / primal_g[2]
+    plt.plot(x_vals, y_vals_primal, 'r--', label='Primal SVM hyperplane')
+    
 
     # plot the last chosen hypothesis g for visualization purpose
     y_vals_g = (-g_perceptron[0] - g_perceptron[1]*x_vals) / g_perceptron[2]
