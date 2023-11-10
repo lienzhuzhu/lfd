@@ -35,7 +35,7 @@ def generate_data(N, a, b, c):
         
         # Check if at least one label is different from the others
         if len(np.unique(Y)) > 1:
-            return X_with_bias, Y
+            return X, X_with_bias, Y
 
 
 
@@ -64,7 +64,7 @@ def perceptron_learning_algorithm(X, Y, w_init=None):
 
 
 def svm_libsvm(X, Y):
-    model = svm.SVC(kernel='linear', C=1e5)
+    model = svm.SVC(kernel='linear', C=1e6)
     model.fit(X, Y)
     return model
 
@@ -79,8 +79,8 @@ def svm_qp(X, Y):
 ########################
 
 def calc_E_out(g, model, a, b, c, num_samples=TEST_SAMPLES):
-    X_test, Y_f = generate_data(num_samples, a, b, c)
-    Y_pla = np.sign(X_test.dot(g))
+    X_test, X_test_aug, Y_f = generate_data(num_samples, a, b, c)
+    Y_pla = np.sign(X_test_aug.dot(g))
     Y_svm = model.predict(X_test)
     pla_E_out = np.mean(Y_f != Y_pla)
     svm_E_out = np.mean(Y_f != Y_svm)
@@ -103,9 +103,9 @@ def main():
 
     for i in range(TRIALS):
         a, b, c = generate_target()
-        X, Y = generate_data(args.points, a, b, c)
+        X, X_aug, Y = generate_data(args.points, a, b, c)
 
-        g_perceptron, _ = perceptron_learning_algorithm(X, Y)
+        g_perceptron, _ = perceptron_learning_algorithm(X_aug, Y)
         model = svm_libsvm(X, Y)
         support_vectors.append(sum(model.n_support_))
 
@@ -127,8 +127,8 @@ def main():
 
     # plot data points
     plt.figure(figsize=(8, 6))
-    plt.scatter(X[:, 1][Y == 1], X[:, 2][Y == 1], color='blue', marker='o', label='Class +1')
-    plt.scatter(X[:, 1][Y == -1], X[:, 2][Y == -1], color='red', marker='x', label='Class -1')
+    plt.scatter(X[:, 0][Y == 1], X[:, 1][Y == 1], color='blue', marker='o', label='Class +1')
+    plt.scatter(X[:, 0][Y == -1], X[:, 1][Y == -1], color='red', marker='x', label='Class -1')
 
     # plot target function
     x_vals = np.array([-1, 1])
