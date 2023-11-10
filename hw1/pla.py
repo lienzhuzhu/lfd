@@ -1,4 +1,5 @@
 # Problem Set 1.7-10
+# Perceptron Learning Algorithm
 
 
 import argparse
@@ -49,11 +50,11 @@ def perceptron_learning_algorithm(X, Y):
     return w, num_iterations
 
 
-def calc_disagreement(w_g, a, b, c, num_samples=TEST_SAMPLES):
+def calc_E_out(w_g, a, b, c, num_samples=TEST_SAMPLES):
     X_test, Y_f = generate_data(num_samples, a, b, c)
     Y_g = np.sign(X_test.dot(w_g))
-    disagreement = np.mean(Y_f != Y_g)
-    return disagreement
+    E_out = np.mean(Y_f != Y_g)
+    return E_out
 
 
 def main():
@@ -62,22 +63,22 @@ def main():
     args = parser.parse_args()
 
     iterations_list = []
-    disagreement_probs = []
+    E_out_list = []
 
     for _ in range(RUNS):
         a, b, c = generate_target()
         X, Y = generate_data(args.points, a, b, c)
         w_g, num_iterations = perceptron_learning_algorithm(X, Y)
-        disagreement_prob = calc_disagreement(w_g, a, b, c)
         iterations_list.append(num_iterations)
-        disagreement_probs.append(disagreement_prob)
+        E_out = calc_E_out(w_g, a, b, c)
+        E_out_list.append(E_out)
 
-    # Compute average iterations and disagreement probability over 1000 runs
+    # Compute average iterations and E_out over 1000 runs
     avg_iterations = np.mean(iterations_list)
-    avg_disagreement_prob = np.mean(disagreement_probs)
+    avg_E_out = np.mean(E_out_list)
 
-    print("Iterations:", avg_iterations)
-    print("Disagreement:", avg_disagreement_prob)
+    print("Iterations:\t", avg_iterations)
+    print("E_out:\t\t", avg_E_out)
 
 
 
