@@ -89,7 +89,31 @@ def svm_primal(X, Y):
     return solution, num_support_vectors
 
 def svm_dual(X, Y):
-    pass
+    N = X.shape[0]
+    Y = Y * 1.0
+    X_ = Y.reshape(-1,1) * X # broadcasts y's across data points
+    Q = matrix(np.dot(X_, X_.T))
+    p = matrix(-np.ones((N, 1)))
+
+    G = matrix(-np.eye(N)) # lecture and book combine inequality and equality into matrix A
+    h = matrix(np.zeros(N))
+    A = matrix(Y.reshape(1, -1))
+    b = matrix(0.0)
+
+    solution = solvers.qp(Q, p, G, h, A, b, options={'show_progress': False})
+    alphas = np.array(solution['x']).flatten()
+
+    threshold = 1e-5
+    support_vectors = alphas > threshold
+    num_support_vectors = np.sum(support_vectors)
+
+    w = np.sum(alphas[support_vectors].reshape(-1,1) * Y[support_vectors].reshape(-1,1) * X[support_vectors], axis=0) # ignoring threshold...
+    b = np.mean(Y[support_vectors] - np.dot(X[support_vectors], w))
+    g = np.concatenate([[b], w])
+
+    return g, num_support_vectors
+    
+
 
 
 
@@ -97,17 +121,19 @@ def svm_dual(X, Y):
 ## Error Calculations ##
 ########################
 
-def calc_E_out(g, model, primal, a, b, c, num_samples=TEST_SAMPLES):
+def calc_E_out(g, model, primal, dual, a, b, c, num_samples=TEST_SAMPLES):
     X_test, X_test_aug, Y_f = generate_data(num_samples, a, b, c)
     Y_pla = np.sign(X_test_aug.dot(g))
     Y_svm = model.predict(X_test)
-    Y_primal = np.sign(X_test_aug.dot(np.array(primal['x'])).flatten())
+    Y_primal = np.sign(X_test_aug.dot(np.array(primal['x']).flatten()))
+    Y_dual = np.sign(X_test_aug.dot(dual))
 
     pla_E_out = np.mean(Y_f != Y_pla)
     svm_E_out = np.mean(Y_f != Y_svm)
     primal_E_out = np.mean(Y_f != Y_primal)
+    dual_E_out = np.mean(Y_f != Y_dual)
 
-    return pla_E_out, svm_E_out, primal_E_out
+    return pla_E_out, svm_E_out, primal_E_out, dual_E_out
 
 
 
@@ -120,45 +146,49 @@ def main():
     parser.add_argument('-N', '--points', default=10, type=int, help='Number of sample data points to generate')
     args = parser.parse_args()
 
-    pla_E_out_list = []
-    svm_E_out_list = []
-    primal_E_out_list = []
-    support_vectors = []
-    primal_support_vectors = []
-    svm_wins = 0
-    primal_wins = 0
+    pla_E_out_list, svm_E_out_list, primal_E_out_list, dual_E_out_list = [], [], [], []
+    support_vectors, primal_support_vectors, dual_support_vectors = [], [], []
+    svm_wins, primal_wins, dual_wins = 0, 0, 0
 
     for i in range(TRIALS):
         a, b, c = generate_target()
         X, X_aug, Y = generate_data(args.points, a, b, c)
 
-        g_perceptron, _ = perceptron_learning_algorithm(X_aug, Y)
+        perceptron, _ = perceptron_learning_algorithm(X_aug, Y)
         model = svm_libsvm(X, Y)
         primal, num_primal_support_vectors = svm_primal(X, Y)
+        dual, num_dual_support_vectors = svm_dual(X, Y)
 
         support_vectors.append(sum(model.n_support_))
         primal_support_vectors.append(num_primal_support_vectors)
+        dual_support_vectors.append(num_dual_support_vectors)
 
-        pla_E_out, svm_E_out, primal_E_out = calc_E_out(g_perceptron, model, primal, a, b, c)
+        pla_E_out, svm_E_out, primal_E_out, dual_E_out = calc_E_out(perceptron, model, primal, dual, a, b, c)
 
         pla_E_out_list.append(pla_E_out)
         svm_E_out_list.append(svm_E_out)
         primal_E_out_list.append(primal_E_out)
+        dual_E_out_list.append(dual_E_out)
 
         svm_wins += svm_E_out < pla_E_out
         primal_wins += primal_E_out < pla_E_out
+        dual_wins += dual_E_out < pla_E_out
+
 
     print("PLA E_out:\t\t", np.mean(pla_E_out_list))
     print("SVM E_out:\t\t", np.mean(svm_E_out_list))
     print("Primal E_out:\t\t", np.mean(primal_E_out_list))
+    print("Dual E_out:\t\t", np.mean(dual_E_out_list))
     print()
 
     print("Support Vectors:\t", np.mean(support_vectors), "support vectors")
     print("Primal Vectors:\t\t", np.mean(primal_support_vectors), "support vectors")
+    print("Dual Vectors:\t\t", np.mean(dual_support_vectors), "support vectors")
     print()
 
     print("SVM won\t\t\t", svm_wins / TRIALS, "times")
     print("Primal won\t\t", primal_wins / TRIALS, "times")
+    print("Dual won\t\t", dual_wins / TRIALS, "times")
 
 
 
@@ -176,21 +206,25 @@ def main():
     y_vals = (-c - a*x_vals) / b
     plt.plot(x_vals, y_vals, 'k-', label='Target function f')
 
+    # plot the last perceptron
+    y_vals_g = (-perceptron[0] - perceptron[1]*x_vals) / perceptron[2]
+    plt.plot(x_vals, y_vals_g, 'y--', label='Perceptron')
+
     # plot the last SVM line
     w = model.coef_[0]
     b = model.intercept_[0]
     y_vals_svm = (-b - w[0]*x_vals) / w[1]
-    plt.plot(x_vals, y_vals_svm, 'y.-', label='SVM hyperplane')
+    plt.plot(x_vals, y_vals_svm, 'm:', label='SVM')
 
     # plot the last primal SVM line
     primal_g = np.array(primal['x']).flatten()
     y_vals_primal = (-primal_g[0] - primal_g[1]*x_vals) / primal_g[2]
-    plt.plot(x_vals, y_vals_primal, 'r--', label='Primal SVM hyperplane')
+    plt.plot(x_vals, y_vals_primal, 'r:', label='Primal SVM')
     
+    # plot the last dual SVM line
+    y_vals_dual = (-dual[0] - dual[1]*x_vals) / dual[2]
+    plt.plot(x_vals, y_vals_dual, 'k:', label='Dual SVM')
 
-    # plot the last chosen hypothesis g for visualization purpose
-    y_vals_g = (-g_perceptron[0] - g_perceptron[1]*x_vals) / g_perceptron[2]
-    plt.plot(x_vals, y_vals_g, 'm--', label='Hypothesis g')
 
     plt.xlim(-1, 1)
     plt.ylim(-1, 1)
