@@ -142,7 +142,7 @@ def calc_E_out(g, model, primal, dual, a, b, c, num_samples=TEST_SAMPLES):
 #################
 
 def main():
-    parser = argparse.ArgumentParser(description="Perceptron Learning Algorithm")
+    parser = argparse.ArgumentParser(description="Perceptron Learning Algorithm and SVM")
     parser.add_argument('-N', '--points', default=10, type=int, help='Number of sample data points to generate')
     args = parser.parse_args()
 
