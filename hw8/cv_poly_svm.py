@@ -73,7 +73,6 @@ def calc_E_cv(C, data):
     folds = 0.
     for X, Y, X_test, Y_test in data:
         model = svm_libsvm(X, Y, C=C, Q=2)
-        model.fit(X, Y)
         sum += calc_e(model, X_test, Y_test)
         folds += 1.
     

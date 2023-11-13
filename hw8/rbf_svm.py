@@ -1,5 +1,5 @@
 # Problem Set 8
-# Support Vector Machine with Soft Margin and Polynomial Kernel
+# Support Vector Machine with Soft Margin and RBF Kernel
 
 
 import numpy as np
@@ -38,8 +38,8 @@ def load_data(file_path, digit, other_digit=None):
 ## Learning Algorithms ##
 #########################
 
-def svm_libsvm(X, Y, C=0.01, Q=2):
-    model = svm.SVC(C=C, kernel='poly', degree=Q, gamma=1)
+def svm_libsvm(X, Y, C=0.01):
+    model = svm.SVC(C=C, kernel='rbf', degree=Q, gamma=1)
     model.fit(X, Y)
     return model
 
