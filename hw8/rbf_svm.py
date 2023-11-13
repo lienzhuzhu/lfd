@@ -39,7 +39,7 @@ def load_data(file_path, digit, other_digit=None):
 #########################
 
 def svm_libsvm(X, Y, C=0.01):
-    model = svm.SVC(C=C, kernel='rbf', degree=Q, gamma=1)
+    model = svm.SVC(C=C, kernel='rbf', gamma=1)
     model.fit(X, Y)
     return model
 
@@ -65,37 +65,25 @@ def calc_E_cv(model, X, Y):
 #################
 
 def main():
-    parser = argparse.ArgumentParser(description="Polynomial Kernel Soft Margin SVM")
+    parser = argparse.ArgumentParser(description="RBF Kernel Soft Margin SVM")
     parser.add_argument('-d', '--digit', type=int, help='First digit class')
     parser.add_argument('-o', '--other', type=int, help='Second digit class')
     args = parser.parse_args()
         
     if args.digit and args.other:
 
-        C_list = [0.0001, 0.001, 0.01, 0.1, 1]
+        C_list = [0.01, 1, 100, 1e4, 1e6]
         X, Y = load_data(TRAIN_DATA, args.digit, args.other)
         X_test, Y_test = load_data(TEST_DATA, args.digit, args.other)
 
-        print("Q =", 2)
         for C in C_list:
-            model = svm_libsvm(X, Y, C=C, Q=2)
+            model = svm_libsvm(X, Y, C=C)
             num_alphas = sum(model.n_support_)
 
             E_in = calc_e(model, X, Y)
             E_out = calc_e(model, X_test, Y_test)
 
-            print(f"C = {C:.4f}\t{args.digit} versus {args.other}  E_in: {E_in:.5f}  E_out: {E_out:.5f}  SVs: {round(num_alphas)}")
-        print()
-
-        print("Q =", 5)
-        for C in C_list:
-            model = svm_libsvm(X, Y, C=C, Q=5)
-            num_alphas = sum(model.n_support_)
-
-            E_in = calc_e(model, X, Y)
-            E_out = calc_e(model, X_test, Y_test)
-
-            print(f"C = {C:.4f}\t{args.digit} versus {args.other}  E_in: {E_in:.5f}  E_out: {E_out:.5f}  SVs: {round(num_alphas)}")
+            print(f"C = {C:.2f}\t{args.digit} versus {args.other}  E_in: {E_in:.5f}  E_out: {E_out:.5f}  SVs: {round(num_alphas)}")
 
     else:
         
