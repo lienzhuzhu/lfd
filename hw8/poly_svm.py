@@ -73,15 +73,15 @@ def main():
     if args.digit and args.other:
 
         C_list = [0.0001, 0.001, 0.01, 0.1, 1]
+        X, Y = load_data(TRAIN_DATA, args.digit, args.other)
+        X_test, Y_test = load_data(TEST_DATA, args.digit, args.other)
 
         print("Q =", 2)
         for C in C_list:
-            X, Y = load_data(TRAIN_DATA, args.digit, args.other)
             model = svm_libsvm(X, Y, C=C, Q=2)
             num_alphas = sum(model.n_support_)
 
             E_in = calc_e(model, X, Y)
-            X_test, Y_test = load_data(TEST_DATA, 1, 5)
             E_out = calc_e(model, X_test, Y_test)
 
             print(f"C = {C:.4f}\t{args.digit} versus {args.other}  E_in: {E_in:.5f}  E_out: {E_out:.5f}  SVs: {round(num_alphas)}")
@@ -89,12 +89,10 @@ def main():
 
         print("Q =", 5)
         for C in C_list:
-            X, Y = load_data(TRAIN_DATA, args.digit, args.other)
             model = svm_libsvm(X, Y, C=C, Q=5)
             num_alphas = sum(model.n_support_)
 
             E_in = calc_e(model, X, Y)
-            X_test, Y_test = load_data(TEST_DATA, 1, 5)
             E_out = calc_e(model, X_test, Y_test)
 
             print(f"C = {C:.4f}\t{args.digit} versus {args.other}  E_in: {E_in:.5f}  E_out: {E_out:.5f}  SVs: {round(num_alphas)}")

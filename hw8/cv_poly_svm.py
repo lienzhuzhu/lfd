@@ -1,5 +1,5 @@
 # Problem Set 8
-# Support Vector Machine with Soft Margin and Polynomial Kernel
+# Support Vector Machine with Soft Margin and Polynomial Kernel with cross validation
 
 
 import numpy as np
@@ -9,7 +9,8 @@ import argparse
 
 
 TRAIN_DATA  = "./data/features.train"
-TEST_DATA  = "./data/features.test"
+TEST_DATA   = "./data/features.test"
+TRIALS      = 100
 
 
 
@@ -66,51 +67,27 @@ def calc_E_cv(model, X, Y):
 
 def main():
     parser = argparse.ArgumentParser(description="Polynomial Kernel Soft Margin SVM")
-    parser.add_argument('-d', '--digit', type=int, help='First digit class')
-    parser.add_argument('-o', '--other', type=int, help='Second digit class')
+    parser.add_argument('-d', '--digit', type=int, help='First digit class', required=True)
+    parser.add_argument('-o', '--other', type=int, help='Second digit class', required=True)
     args = parser.parse_args()
         
-    if args.digit and args.other:
 
-        C_list = [0.0001, 0.001, 0.01, 0.1, 1]
+    C_list = [0.0001, 0.001, 0.01, 0.1, 1]
+    C_map = {C: 0 for C in C_list}
 
-        print("Q =", 2)
+    for trial in TRIALS:
+
+        min_E_cv = 1.
+
         for C in C_list:
             X, Y = load_data(TRAIN_DATA, args.digit, args.other)
             model = svm_libsvm(X, Y, C=C, Q=2)
-            num_alphas = sum(model.n_support_)
+            E_cv = calc_E_cv(model, X, Y)
 
-            E_in = calc_e(model, X, Y)
-            X_test, Y_test = load_data(TEST_DATA, 1, 5)
-            E_out = calc_e(model, X_test, Y_test)
 
-            print(f"C = {C:.4f}\t{args.digit} versus {args.other}  E_in: {E_in:.5f}  E_out: {E_out:.5f}  SVs: {round(num_alphas)}")
-        print()
-
-        print("Q =", 5)
-        for C in C_list:
-            X, Y = load_data(TRAIN_DATA, args.digit, args.other)
-            model = svm_libsvm(X, Y, C=C, Q=5)
-            num_alphas = sum(model.n_support_)
-
-            E_in = calc_e(model, X, Y)
-            X_test, Y_test = load_data(TEST_DATA, 1, 5)
-            E_out = calc_e(model, X_test, Y_test)
-
-            print(f"C = {C:.4f}\t{args.digit} versus {args.other}  E_in: {E_in:.5f}  E_out: {E_out:.5f}  SVs: {round(num_alphas)}")
-
-    else:
-        
-        for digit in range(0,10):
-            X, Y = load_data(TRAIN_DATA, digit)
-            model = svm_libsvm(X, Y)
-            num_alphas = sum(model.n_support_)
-
-            E_in = calc_e(model, X, Y)
-            X_test, Y_test = load_data(TEST_DATA, digit)
-            E_out = calc_e(model, X_test, Y_test)
-
-            print(f"{digit} versus all  E_in: {E_in:.5f}  E_out: {E_out:.5f}  SVs: {round(num_alphas)}")
+    X_test, Y_test = load_data(TEST_DATA, 1, 5)
+    E_out = calc_e(model, X_test, Y_test)
+    print(f"C = {C:.4f}\t{args.digit} versus {args.other}  E_in: {E_in:.5f}  E_out: {E_out:.5f}  SVs: {round(num_alphas)}")
 
 
 if __name__ == "__main__":
