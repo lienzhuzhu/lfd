@@ -4,6 +4,7 @@
 
 import numpy as np
 from sklearn import svm
+from cvxopt import matrix, solvers
 import argparse
 
 
@@ -35,20 +36,34 @@ def svm_libsvm(X, Y, C=1e6, Q=2):
     return model
 
 
+def svm_dual(X, Y, Q=2):
+    N = X.shape[0]
+    Y = Y * 1.0
+    Y_ = np.dot(Y, Y.T) 
+    X_ = (1 + np.dot(X, X.T)) ** Q
 
-########################
-## Error Calculations ##
-########################
+    Q = matrix(Y_ * X_)
+    p = matrix(-np.ones((N, 1)))
 
-def calc_e(model, X_test, Y_test):
-    Y_svm = model.predict(X_test)
-    e = np.mean(Y_test != Y_svm)
-    return e
+    G = matrix(-np.eye(N)) # lecture and book combine inequality and equality into matrix A
+    h = matrix(np.zeros(N))
+    A = matrix(Y.reshape(1, -1))
+    b = matrix(0.0)
 
+    solution = solvers.qp(Q, p, G, h, A, b, options={'show_progress': False})
+    alphas = np.array(solution['x']).flatten()
 
-def calc_E_cv(model, X, Y):
-    pass
+    threshold = 1e-3
+    support_vectors = alphas > threshold
+    num_support_vectors = np.sum(support_vectors)
 
+    w = np.sum(alphas[support_vectors].reshape(-1,1) * Y[support_vectors].reshape(-1,1) * X[support_vectors], axis=0) # ignoring threshold...
+    b = np.mean(Y[support_vectors] - np.dot(X[support_vectors], w))
+    g = np.concatenate([[b], w])
+
+    print(np.round(alphas, 2))
+
+    return g, num_support_vectors
 
 
 #################
@@ -57,7 +72,12 @@ def calc_E_cv(model, X, Y):
 
 def main():
     X, Y = load_data()
-    print(X)
+    model = svm_libsvm(X, Y)
+    print(f"libsvm:\t{sum(model.n_support_)}")
+
+    _, dual = svm_dual(X, Y)
+    print(f"Using threshold of {1e-3}")
+    print(f"Dual:\t{dual}")
 
 if __name__ == "__main__":
     main()
