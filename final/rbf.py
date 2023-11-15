@@ -8,6 +8,9 @@ import argparse
 
 
 
+TRIALS = 100
+
+
 #######################
 ### Data Processing ###
 #######################
@@ -23,8 +26,8 @@ def generate_data(N=100):
 ## Learning Algorithms ##
 #########################
 
-def svm_libsvm(X, Y, C=1e6):
-    model = svm.SVC(C=C, kernel='rbf', gamma=1)
+def svm_libsvm(X, Y, C=1e6, G=1.5):
+    model = svm.SVC(C=C, kernel='rbf', gamma=G)
     model.fit(X, Y)
     return model
 
@@ -34,22 +37,19 @@ def find_centers(X, K):
 
 def rbf_model(X, Y):
     #find_centers()
-    #pseudo inverse for weights
-    pass
+    #pseudo inverse for weights aka coefficients
+    return coefficients
+    #predictions = sign(signal) = sign(weights * rbf)
 
 
 ########################
 ## Error Calculations ##
 ########################
 
-def calc_e(model, X_test, Y_test):
+def calc_e(model, rbf_weights, X_test, Y_test):
     Y_svm = model.predict(X_test)
     e = np.mean(Y_test != Y_svm)
     return e
-
-
-def calc_E_cv(model, X, Y):
-    pass
 
 
 
@@ -59,20 +59,30 @@ def calc_E_cv(model, X, Y):
 
 def main():
     parser = argparse.ArgumentParser(description="RBF Kernel vs RBF Model")
-        
+    parser.add_argument('--gamma', type=int, help='Gamma parameter for Gaussian spread')
+    parser.add_argument('--centers', type=int, help='Number of centers K')
+    args = parser.parse_args()
 
-        C_list = [0.01, 1, 100, 1e4, 1e6]
-        X, Y = load_data(TRAIN_DATA, args.digit, args.other)
-        X_test, Y_test = load_data(TEST_DATA, args.digit, args.other)
+    G = args.gamma if args.gamma else 1.5
+    K = args.centers if args.centers else 9
 
-        for C in C_list:
-            model = svm_libsvm(X, Y, C=C)
-            num_alphas = sum(model.n_support_)
+    svm_In_list, svm_Out_list, rbf_In_list, rbf_Out_list = [], [], [], []
+    inseparable_freq = 0
 
-            E_in = calc_e(model, X, Y)
-            E_out = calc_e(model, X_test, Y_test)
+    while trial < TRIALS:
+        X, Y = generate_data()
 
-            print(f"C = {C:.2f}\t{args.digit} versus {args.other}  E_in: {E_in:.5f}  E_out: {E_out:.5f}  SVs: {round(num_alphas)}")
+        model = svm_libsvm(X, Y, gamma=G)
+        if model.predict(X, Y) != 0:
+            trial -= 1
+            inseparable_freq += 1
+            continue
+
+        num_alphas = sum(model.n_support_)
+
+        trial += 1
+
+    #print statistics
 
 
 if __name__ == "__main__":
