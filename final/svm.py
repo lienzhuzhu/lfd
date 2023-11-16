@@ -66,7 +66,8 @@ def svm_dual(X, Y, degree=2):
 
 def svm_predict(alphas, Y, X_sv, b, X_test, Q=2):
     kernel_x = (1 + np.dot(X_sv, X_test.T)) ** Q
-    return np.sign(np.sum(alphas * Y * kernel_x) + b)
+    return np.sign(np.sum(alphas * Y * kernel_x, axis=0) + b)
+
 
 
 #################
