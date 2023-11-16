@@ -55,7 +55,7 @@ def svm_dual(X, Y, degree=2):
 
     threshold = 1e-3
     support_vectors = alphas > threshold
-    #SV_ = (1 + np.dot(X[support_vectors], X[support_vectors].T)) ** Q
+    #SV_ = (1 + np.dot(X[support_vectors], X[support_vectors].T)) ** degree
     SV_ = (1 + np.matmul(X[support_vectors], X[support_vectors].T)) ** degree
     b = np.mean(Y[support_vectors] - alphas[support_vectors] * Y[support_vectors] * np.sum(SV_, axis=1))
 
