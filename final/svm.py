@@ -36,11 +36,11 @@ def svm_libsvm(X, Y, C=1e6, Q=2):
     return model
 
 
-def svm_dual(X, Y, Q=2):
+def svm_dual(X, Y, degree=2):
     N = X.shape[0]
     Y = Y * 1.0
     Y_ = np.dot(Y, Y.T) 
-    X_ = (1 + np.dot(X, X.T)) ** Q
+    X_ = (1 + np.dot(X, X.T)) ** degree
 
     Q = matrix(Y_ * X_)
     p = matrix(-np.ones((N, 1)))
@@ -55,16 +55,18 @@ def svm_dual(X, Y, Q=2):
 
     threshold = 1e-3
     support_vectors = alphas > threshold
-    num_support_vectors = np.sum(support_vectors)
-    b = np.mean(Y[support_vectors] - np.dot(X[support_vectors], w))
+    #SV_ = (1 + np.dot(X[support_vectors], X[support_vectors].T)) ** Q
+    SV_ = (1 + np.matmul(X[support_vectors], X[support_vectors].T)) ** degree
+    b = np.mean(Y[support_vectors] - alphas[support_vectors] * Y[support_vectors] * np.sum(SV_, axis=1))
 
     print(np.round(alphas, 2))
 
-    return b, num_support_vectors
+    return alphas[support_vectors], Y[support_vectors], b, X[support_vectors]
 
 
-def svm_predict(alphas, b):
-    pass
+def svm_predict(alphas, Y, X_sv, b, X_test, Q=2):
+    kernel_x = (1 + np.dot(X_sv, X_test.T)) ** Q
+    return np.sign(np.sum(alphas * Y * kernel_x) + b)
 
 
 #################
@@ -76,9 +78,9 @@ def main():
     model = svm_libsvm(X, Y)
     print(f"libsvm:\t{sum(model.n_support_)}")
 
-    _, dual = svm_dual(X, Y)
+    _, _, _, dual_sv = svm_dual(X, Y)
     print(f"Using threshold of {1e-3}")
-    print(f"Dual:\t{dual}")
+    print(f"Dual:\t{dual_sv.shape[0]}")
 
 if __name__ == "__main__":
     main()
