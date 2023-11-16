@@ -56,10 +56,15 @@ def svm_dual(X, Y, Q=2):
     threshold = 1e-3
     support_vectors = alphas > threshold
     num_support_vectors = np.sum(support_vectors)
+    b = np.mean(Y[support_vectors] - np.dot(X[support_vectors], w))
 
     print(np.round(alphas, 2))
 
-    return num_support_vectors
+    return b, num_support_vectors
+
+
+def svm_predict(alphas, b):
+    pass
 
 
 #################
@@ -71,7 +76,7 @@ def main():
     model = svm_libsvm(X, Y)
     print(f"libsvm:\t{sum(model.n_support_)}")
 
-    dual = svm_dual(X, Y)
+    _, dual = svm_dual(X, Y)
     print(f"Using threshold of {1e-3}")
     print(f"Dual:\t{dual}")
 
