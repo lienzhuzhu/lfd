@@ -52,7 +52,7 @@ def partition_data(X, Y, num_folds=10):
 #########################
 
 def svm_libsvm(X, Y, C=0.01, Q=2):
-    model = svm.SVC(C=C, kernel='poly', degree=Q, gamma=1)
+    model = svm.SVC(C=C, kernel='poly', degree=Q, gamma=1, coef0=1.0)
     model.fit(X, Y)
     return model
 
@@ -109,7 +109,7 @@ def main():
         C_map[best_model] += 1
 
     best_C = max(C_map, key=lambda k: (C_map[k], k))
-    print(f"\nThe model with the most selections is C = {best_C}")
+    print(f"The model with the most selections is C = {best_C}")
 
     model = svm_libsvm(X, Y, C=best_C, Q=2)
     best_E_cv = np.mean(E_cv_map[best_C])

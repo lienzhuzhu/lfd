@@ -39,7 +39,7 @@ def load_data(file_path, digit, other_digit=None):
 #########################
 
 def svm_libsvm(X, Y, C=0.01, Q=2):
-    model = svm.SVC(C=C, kernel='poly', degree=Q, gamma=1)
+    model = svm.SVC(C=C, kernel='poly', degree=Q, gamma=1, coef0=1.0)
     model.fit(X, Y)
     return model
 
