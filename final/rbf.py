@@ -8,7 +8,7 @@ import argparse
 
 
 
-TRIALS          = 100
+TRIALS          = 1
 TEST_POINTS     = 1000
 
 
@@ -40,15 +40,15 @@ def find_centers(X, K=9):
     # 2. update centers to average point of constituent points in cluster
 
     clusters = {center_index : [] for center_index in range(K)}
-    clusters[0] = [x for x in X]
+    cluster_assignments = np.random.randint(0, K, X.shape[0])
+    clusters = {k: X[cluster_assignments == k].tolist() for k in range(K)}
 
     centers = X[np.random.choice(X.shape[0], K, replace=False)]
-    prev_centers = None
-    while not np.any(prev_centers) or np.any(centers != prev_centers):
+    prev_centers = np.zeros_like(centers)
+    while not np.allclose(centers, prev_centers):
         better_clusters = {center_index : [] for center_index in range(K)}
         for cluster in clusters.values():
-            for point in cluster:
-                x = cluster.pop()
+            for x in cluster:
                 better_cluster_id = np.argmin(np.linalg.norm(centers - x, axis=1))
                 better_clusters[better_cluster_id].append(x)
 
@@ -56,7 +56,7 @@ def find_centers(X, K=9):
             if not cluster:
                 raise ValueError("Empty Cluster")
 
-        prev_centers = centers
+        prev_centers = centers.copy()
         centers = np.array([np.mean(cluster, axis=0) for cluster in better_clusters.values()])
         clusters = better_clusters
 
@@ -64,11 +64,10 @@ def find_centers(X, K=9):
 
 
 
-def rbf_model():
-    #find_centers()
-    #pseudo inverse for weights aka coefficients
-    return coefficients
-    #predictions = sign(signal) = sign(weights * rbf)
+def rbf_model(X, Y):
+    find_centers(X)
+    #use pseudo inverse to find coefficients
+    #predictions = sign(signal) = sign(coefficients * rbf matrix)
 
 def rbf_model_predict():
     pass
@@ -111,7 +110,7 @@ def main():
             continue
 
         try:
-            centers = find_centers(X)
+            centers = rbf_model(X, Y)
         except ValueError as e:
             continue
 
@@ -120,7 +119,6 @@ def main():
 
     print()
     print(f"Bad RBF SVM Problem {(inseparable_freq / TRIALS):.2f} times")
-    print(centers)
 
 
 if __name__ == "__main__":
