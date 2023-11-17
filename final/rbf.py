@@ -32,15 +32,23 @@ def svm_libsvm(X, Y, C=1e6, G=1.5):
     return model
 
 
-def find_centers(X, K):
-    pass
+def find_centers(X, K=9):
+    #initialize K random centers from the data set X
+    #while the element-wise difference of the centers matrix is non-zero
+    # 1. assign each point in X to a center in clusters dictionary (maintain an original copy of this dictionary to iterate through) based on closest center
+    # 2. update centers to average point of constituent points in cluster
 
-def rbf_model(X, Y):
+    centers = X[np.random.choice(X.shape[0], K, replace=False)]
+
+
+def rbf_model():
     #find_centers()
     #pseudo inverse for weights aka coefficients
     return coefficients
     #predictions = sign(signal) = sign(weights * rbf)
 
+def rbf_model_predict():
+    pass
 
 ########################
 ## Error Calculations ##
@@ -68,21 +76,24 @@ def main():
 
     svm_In_list, svm_Out_list, rbf_In_list, rbf_Out_list = [], [], [], []
     inseparable_freq = 0
+    sv_list = []
 
+    trial = 0
     while trial < TRIALS:
         X, Y = generate_data()
 
-        model = svm_libsvm(X, Y, gamma=G)
-        if model.predict(X, Y) != 0:
+        model = svm_libsvm(X, Y, G=G)
+        if calc_e(model, None, X, Y) != 0:
             trial -= 1
             inseparable_freq += 1
             continue
 
-        num_alphas = sum(model.n_support_)
+        sv_list.append(sum(model.n_support_))
 
         trial += 1
 
     #print statistics
+    print(np.mean(sv_list))
 
 
 if __name__ == "__main__":

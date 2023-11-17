@@ -40,9 +40,9 @@ def svm_dual(X, Y, degree=2):
     N = X.shape[0]
     Y = Y * 1.0
     Y_ = np.dot(Y, Y.T) 
-    X_ = (1 + np.dot(X, X.T)) ** degree
+    K = (1 + np.dot(X, X.T)) ** degree
 
-    Q = matrix(Y_ * X_)
+    Q = matrix(Y_ * K)
     p = matrix(-np.ones((N, 1)))
 
     G = matrix(-np.eye(N)) # lecture and book combine inequality and equality into matrix A
@@ -55,9 +55,9 @@ def svm_dual(X, Y, degree=2):
 
     threshold = 1e-3
     support_vectors = alphas > threshold
-    #SV_ = (1 + np.dot(X[support_vectors], X[support_vectors].T)) ** degree
-    SV_ = (1 + np.matmul(X[support_vectors], X[support_vectors].T)) ** degree
-    b = np.mean(Y[support_vectors] - alphas[support_vectors] * Y[support_vectors] * np.sum(SV_, axis=1))
+    #SV = (1 + np.dot(X[support_vectors], X[support_vectors].T)) ** degree
+    SV = (1 + np.matmul(X[support_vectors], X[support_vectors].T)) ** degree
+    b = np.mean(Y[support_vectors] - alphas[support_vectors] * Y[support_vectors] * np.sum(SV, axis=1))
 
     print(np.round(alphas, 2))
 
