@@ -103,7 +103,6 @@ def main():
     iterations_list = []
     Error_in_list = []
     Error_out_list = []
-    W = np.zeros((3, TRIALS))
 
     for i in range(TRIALS):
         a, b, c = generate_target()
@@ -111,7 +110,6 @@ def main():
 
         # regression
         g_regression = linear_regression(X, Y)
-        W[:,i] = g_regression
 
         # pla
         g_perceptron, iterations = perceptron_learning_algorithm(X, Y, g_regression.copy())
