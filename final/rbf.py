@@ -8,7 +8,7 @@ import argparse
 
 
 
-TRIALS          = 1
+TRIALS          = 1000
 TEST_POINTS     = 1000
 
 
@@ -27,18 +27,13 @@ def generate_data(N=100):
 ## Learning Algorithms ##
 #########################
 
-def svm_libsvm(X, Y, C=1e6, G=1.5):
+def svm_libsvm(X, Y, G, C=1e6):
     model = svm.SVC(C=C, kernel='rbf', gamma=G)
     model.fit(X, Y)
     return model
 
 
-def find_centers(X, K=9):
-    #initialize K random centers from the data set X
-    #while the element-wise difference of the centers matrix is non-zero
-    # 1. assign each point in X to a center in clusters dictionary (maintain an original copy of this dictionary to iterate through) based on closest center
-    # 2. update centers to average point of constituent points in cluster
-
+def find_centers(X, K):
     clusters = {center_index : [] for center_index in range(K)}
     cluster_assignments = np.random.randint(0, K, X.shape[0])
     clusters = {k: X[cluster_assignments == k].tolist() for k in range(K)}
@@ -52,10 +47,6 @@ def find_centers(X, K=9):
                 better_cluster_id = np.argmin(np.linalg.norm(centers - x, axis=1))
                 better_clusters[better_cluster_id].append(x)
 
-        for cluster in better_clusters.values():
-            if not cluster:
-                raise ValueError("Empty Cluster")
-
         for i, cluster in enumerate(better_clusters.values()):
             if not cluster:
                 centers[i] = X[np.random.choice(X.shape[0])]
@@ -68,7 +59,7 @@ def find_centers(X, K=9):
     return centers
 
 
-def compute_rbf_matrix(X, centers, gamma=1.5):
+def compute_rbf_matrix(X, centers, gamma):
     diff = X[:, np.newaxis, :] - centers[np.newaxis, :, :]
     sq_dist = np.sum(diff ** 2, axis=2)
     K_rbf = np.exp(-gamma * sq_dist)
@@ -76,16 +67,16 @@ def compute_rbf_matrix(X, centers, gamma=1.5):
     return K_rbf
 
 
-def rbf_model_train(X, Y, K=9, gamma=1.5):
+def rbf_model_train(X, Y, K, gamma):
     centers = find_centers(X, K)
     K_rbf = compute_rbf_matrix(X, centers, gamma)
     coeffs = np.matmul(np.linalg.pinv(K_rbf), Y)
-    return coeffs
+    return centers, coeffs
 
 
-def rbf_model_predict(X_test, Y, centers, coefs, K=9, gamma=1.5):
+def rbf_model_predict(X_test, centers, coeffs, gamma):
     K_rbf = compute_rbf_matrix(X_test, centers, gamma)
-    return np.dot(K_rbf, coeffs)
+    return np.sign(np.dot(K_rbf, coeffs))
 
 
 
@@ -99,6 +90,11 @@ def calc_e(model, X_test, Y_test):
     return e
 
 
+def calc_e_rbf(centers, coeffs, X_test, Y_test, gamma):
+    Y_rbf = rbf_model_predict(X_test, centers, coeffs, gamma)
+    e = np.mean(Y_test != Y_rbf)
+    return e
+
 
 #################
 ## Driver Code ##
@@ -106,34 +102,56 @@ def calc_e(model, X_test, Y_test):
 
 def main():
     parser = argparse.ArgumentParser(description="RBF Kernel vs RBF Model")
-    parser.add_argument('--gamma', type=int, help='Gamma parameter for Gaussian spread')
+    parser.add_argument('--gamma', type=float, help='Gamma parameter for Gaussian spread')
     parser.add_argument('--centers', type=int, help='Number of centers K')
     args = parser.parse_args()
 
     gamma = args.gamma if args.gamma else 1.5
     K = args.centers if args.centers else 9
 
-    svm_In_list, svm_Out_list, rbf_In_list, rbf_Out_list = [], [], [], []
+    svm_in_list, svm_out_list, rbf_in_list, rbf_out_list = [], [], [], []
     inseparable_freq = 0
+
+    svm_wins = 0
+    rbf_perfect = 0
 
     trial = 0
     while trial < TRIALS:
         X, Y = generate_data()
 
-        model = svm_libsvm(X, Y, G=gamma)
+        model = svm_libsvm(X, Y, gamma)
         svm_in = calc_e(model, X, Y)
         if svm_in != 0:
             inseparable_freq += 1
             continue
 
-        centers = find_centers(X)
-        print(centers)
+        centers, coeffs = rbf_model_train(X, Y, K, gamma)
+        rbf_in = calc_e_rbf(centers, coeffs, X, Y, gamma)
 
+        X_test, Y_test = generate_data(TEST_POINTS)
+        svm_out = calc_e(model, X_test, Y_test)
+        rbf_out = calc_e_rbf(centers, coeffs, X_test, Y_test, gamma)
 
+        svm_in_list.append(svm_in)
+        rbf_in_list.append(rbf_in)
+        svm_out_list.append(svm_out)
+        rbf_out_list.append(rbf_out)
+
+        svm_wins += rbf_out > svm_out
+        rbf_perfect += rbf_in == 0.
         trial += 1
 
     print()
-    print(f"Inseparable Data:\t{(inseparable_freq / TRIALS):.2f} times")
+    print(f"Data was inseparable in Z space {(inseparable_freq * 100 / TRIALS)}%")
+    print()
+    print(f"SVM Kernel beat RBF Model {svm_wins * 100 / TRIALS}%")
+    print()
+    print(f"SVM E_in:\t{np.mean(svm_in_list):.4f}")
+    print(f"RBF E_in:\t{np.mean(rbf_in_list):.4f}\tand was zero {rbf_perfect * 100 / TRIALS}%")
+    print()
+    print(f"SVM E_out:\t{np.mean(svm_out_list):.4f}")
+    print(f"RBF E_out:\t{np.mean(rbf_out_list):.4f}")
+    
 
 
 if __name__ == "__main__":
