@@ -56,21 +56,38 @@ def find_centers(X, K=9):
             if not cluster:
                 raise ValueError("Empty Cluster")
 
+        for i, cluster in enumerate(better_clusters.values()):
+            if not cluster:
+                centers[i] = X[np.random.choice(X.shape[0])]
+            else:
+                centers[i] = np.mean(cluster, axis=0)
+
         prev_centers = centers.copy()
-        centers = np.array([np.mean(cluster, axis=0) for cluster in better_clusters.values()])
         clusters = better_clusters
 
     return centers
 
 
+def compute_rbf_matrix(X, centers, gamma=1.5):
+    diff = X[:, np.newaxis, :] - centers[np.newaxis, :, :]
+    sq_dist = np.sum(diff ** 2, axis=2)
+    K_rbf = np.exp(-gamma * sq_dist)
+    
+    return K_rbf
 
-def rbf_model(X, Y):
-    find_centers(X)
-    #use pseudo inverse to find coefficients
-    #predictions = sign(signal) = sign(coefficients * rbf matrix)
 
-def rbf_model_predict():
-    pass
+def rbf_model_train(X, Y, K=9, gamma=1.5):
+    centers = find_centers(X, K)
+    K_rbf = compute_rbf_matrix(X, centers, gamma)
+    coeffs = np.matmul(np.linalg.pinv(K_rbf), Y)
+    return coeffs
+
+
+def rbf_model_predict(X_test, Y, centers, coefs, K=9, gamma=1.5):
+    K_rbf = compute_rbf_matrix(X_test, centers, gamma)
+    return np.dot(K_rbf, coeffs)
+
+
 
 ########################
 ## Error Calculations ##
@@ -109,16 +126,14 @@ def main():
             inseparable_freq += 1
             continue
 
-        try:
-            centers = rbf_model(X, Y)
-        except ValueError as e:
-            continue
+        centers = find_centers(X)
+        print(centers)
 
 
         trial += 1
 
     print()
-    print(f"Bad RBF SVM Problem {(inseparable_freq / TRIALS):.2f} times")
+    print(f"Inseparable Data:\t{(inseparable_freq / TRIALS):.2f} times")
 
 
 if __name__ == "__main__":
