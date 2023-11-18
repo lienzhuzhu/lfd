@@ -59,6 +59,24 @@ def find_centers(X, K):
     return centers
 
 
+def find_centers_fast(X, K):
+    centers = X[np.random.choice(X.shape[0], K, replace=False)]
+    prev_centers = np.zeros_like(centers)
+
+    while not np.allclose(centers, prev_centers):
+        distances = np.linalg.norm(X[:, np.newaxis] - centers, axis=2)
+        closest = np.argmin(distances, axis=1)
+
+        prev_centers = centers.copy()
+        for k in range(K):
+            if np.any(closest == k):
+                centers[k] = X[closest == k].mean(axis=0)
+            else:
+                centers[k] = X[np.random.choice(X.shape[0], 1, replace=False)]
+
+    return centers
+
+
 def compute_rbf_matrix(X, centers, gamma):
     diff = X[:, np.newaxis, :] - centers[np.newaxis, :, :]
     sq_dist = np.sum(diff ** 2, axis=2)
