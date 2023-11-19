@@ -33,7 +33,7 @@ def svm_libsvm(X, Y, G, C=1e6):
     return model
 
 
-def find_centers(X, K):
+def find_centers_naive(X, K):
     clusters = {center_index : [] for center_index in range(K)}
     cluster_assignments = np.random.randint(0, K, X.shape[0])
     clusters = {k: X[cluster_assignments == k].tolist() for k in range(K)}
@@ -59,13 +59,13 @@ def find_centers(X, K):
     return centers
 
 
-def find_centers_fast(X, K):
+def find_centers(X, K):
     centers = X[np.random.choice(X.shape[0], K, replace=False)]
     prev_centers = np.zeros_like(centers)
 
     while not np.allclose(centers, prev_centers):
-        distances = np.linalg.norm(X[:, np.newaxis] - centers, axis=2)
-        closest = np.argmin(distances, axis=1)
+        diff = np.linalg.norm(X[ :, np.newaxis, : ] - centers[np.newaxis, : , : ], axis=2) # linalg.norm() used because argmin(.) is the same as squared distance
+        closest = np.argmin(diff, axis=1)
 
         prev_centers = centers.copy()
         for k in range(K):
@@ -78,7 +78,7 @@ def find_centers_fast(X, K):
 
 
 def compute_rbf_matrix(X, centers, gamma):
-    diff = X[:, np.newaxis, :] - centers[np.newaxis, :, :]
+    diff = X[:, np.newaxis, :] - centers[np.newaxis, : , :]
     sq_dist = np.sum(diff ** 2, axis=2)
     K_rbf = np.exp(-gamma * sq_dist)
     
