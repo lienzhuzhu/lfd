@@ -23,7 +23,7 @@ def main():
     for i in range(TRIALS):
         # Simulate flips for all coins
         flips = np.random.randint(2, size=(COINS, FLIPS))
-        heads_counts = flips.sum(axis=1)
+        heads_counts = flips.sum(axis=-1)
         
         # Record data for the first coin
         first_coin_heads[i] = heads_counts[0]

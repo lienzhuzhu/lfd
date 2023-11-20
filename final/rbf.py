@@ -44,7 +44,7 @@ def find_centers_naive(X, K):
         better_clusters = {center_index : [] for center_index in range(K)}
         for cluster in clusters.values():
             for x in cluster:
-                better_cluster_id = np.argmin(np.linalg.norm(centers - x, axis=1))
+                better_cluster_id = np.argmin(np.linalg.norm(centers - x, axis=-1))
                 better_clusters[better_cluster_id].append(x)
 
         for i, cluster in enumerate(better_clusters.values()):
@@ -64,8 +64,8 @@ def find_centers(X, K):
     prev_centers = np.zeros_like(centers)
 
     while not np.allclose(centers, prev_centers):
-        diff = np.linalg.norm(X[ :, np.newaxis, : ] - centers[np.newaxis, : , : ], axis=2) # linalg.norm() used because argmin(.) is the same as squared distance
-        closest = np.argmin(diff, axis=1)
+        diff = np.linalg.norm(X[ :, np.newaxis, : ] - centers[np.newaxis, : , : ], axis=-1) # linalg.norm() used because argmin(.) is the same as squared distance
+        closest = np.argmin(diff, axis=-1)
 
         prev_centers = centers.copy()
         for k in range(K):
@@ -79,7 +79,7 @@ def find_centers(X, K):
 
 def compute_rbf_matrix(X, centers, gamma):
     diff = X[:, np.newaxis, :] - centers[np.newaxis, : , :]
-    sq_dist = np.sum(diff ** 2, axis=2)
+    sq_dist = np.sum(diff ** 2, axis=-1)
     K_rbf = np.exp(-gamma * sq_dist)
     
     return K_rbf
