@@ -95,7 +95,7 @@ def main():
     E_cv_map = {C: [] for C in C_list}
     X, Y = load_data(TRAIN_DATA, args.digit, args.other)
 
-    for trial in range(TRIALS):
+    for _ in range(TRIALS):
         partitioned_data = partition_data(X, Y)
 
         model_map = {C: 1.0 for C in C_list}
